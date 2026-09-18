@@ -1,0 +1,66 @@
+"""Tests for the 'permissions' plugin."""
+
+import os
+import platform
+from unittest.mock import Mock, patch
+
+import pytest
+
+from beets.test.helper import AsIsImporterMixin, ImportHelper, PluginMixin
+from beetsplug.permissions import (
+    check_permissions,
+    convert_perm,
+    dirs_in_library,
+)
+
+
+class TestPermissionsPlugin(AsIsImporterMixin, PluginMixin, ImportHelper):
+    plugin = "permissions"
+
+    def setup_beets(self):
+        super().setup_beets()
+        self.config["permissions"] = {"file": "777", "dir": "777"}
+
+    def test_permissions_on_album_imported(self):
+        self.import_and_check_permissions()
+
+    def test_permissions_on_item_imported(self):
+        self.config["import"]["singletons"] = True
+        self.import_and_check_permissions()
+
+    def import_and_check_permissions(self):
+        if platform.system() == "Windows":
+            pytest.skip("permissions not available on Windows")
+
+        track_file = self.import_path / "album" / "track_1.mp3"
+        assert track_file.stat().st_mode & 0o777 != 511
+
+        self.run_asis_importer()
+        item = self.lib.items().get()
+
+        paths = (item.path, *dirs_in_library(self.lib.directory, item.path))
+        for path in paths:
+            assert os.stat(path).st_mode & 0o777 == 511
+
+    def test_convert_perm_from_string(self):
+        assert convert_perm("10") == 8
+
+    def test_convert_perm_from_int(self):
+        assert convert_perm(10) == 8
+
+    def test_permissions_on_set_art(self):
+        self.do_set_art(True)
+
+    @patch("os.chmod", Mock())
+    def test_failing_permissions_on_set_art(self):
+        self.do_set_art(False)
+
+    def do_set_art(self, expect_success):
+        if platform.system() == "Windows":
+            pytest.skip("permissions not available on Windows")
+        self.run_asis_importer()
+        album = self.lib.albums().get()
+        artpath = self.temp_path / "cover.jpg"
+        artpath.touch()
+        album.set_art(artpath)
+        assert expect_success == check_permissions(album.artpath, 0o777)

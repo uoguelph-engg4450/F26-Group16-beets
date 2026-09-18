@@ -1,0 +1,125 @@
+"""Updates an MPD index whenever the library is changed.
+
+Put something like the following in your config.yaml to configure:
+    mpd:
+        host: localhost
+        port: 6600
+        password: seekrit
+"""
+
+from __future__ import annotations
+
+import os
+import socket
+from typing import TYPE_CHECKING
+
+from beets import config
+from beets.plugins import BeetsPlugin
+
+if TYPE_CHECKING:
+    from beets.library import LibModel, Library
+
+
+# No need to introduce a dependency on an MPD library for such a
+# simple use case. Here's a simple socket abstraction to make things
+# easier.
+class BufferedSocket:
+    """Socket abstraction that allows reading by line."""
+
+    def __init__(self, host: str, port: int, sep: bytes = b"\n") -> None:
+        if host[0] in ["/", "~"]:
+            self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.sock.connect(os.path.expanduser(host))
+        else:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect((host, port))
+        self.buf = b""
+        self.sep = sep
+
+    def readline(self) -> bytes:
+        while self.sep not in self.buf:
+            data = self.sock.recv(1024)
+            if not data:
+                break
+            self.buf += data
+        if self.sep in self.buf:
+            res, self.buf = self.buf.split(self.sep, 1)
+            return res + self.sep
+        return b""
+
+    def send(self, data: bytes) -> None:
+        self.sock.send(data)
+
+    def close(self) -> None:
+        self.sock.close()
+
+
+class MPDUpdatePlugin(BeetsPlugin):
+    def __init__(self) -> None:
+        super().__init__()
+        config["mpd"].add(
+            {
+                "host": os.environ.get("MPD_HOST", "localhost"),
+                "port": int(os.environ.get("MPD_PORT", 6600)),
+                "password": "",
+            }
+        )
+        config["mpd"]["password"].redact = True
+
+        # For backwards compatibility, use any values from the
+        # plugin-specific "mpdupdate" section.
+        for key in config["mpd"].keys():
+            if self.config[key].exists():
+                config["mpd"][key] = self.config[key].get()
+
+        self.register_listener("database_change", self.db_change)
+
+    def db_change(self, lib: Library, model: LibModel) -> None:
+        self.register_listener("cli_exit", self.update)
+
+    def update(self, lib: Library) -> None:
+        self.update_mpd(
+            config["mpd"]["host"].as_str(),
+            config["mpd"]["port"].get(int),
+            config["mpd"]["password"].as_str(),
+        )
+
+    def update_mpd(
+        self,
+        host: str = "localhost",
+        port: int = 6600,
+        password: str | None = None,
+    ) -> None:
+        """Sends the "update" command to the MPD server indicated,
+        possibly authenticating with a password first.
+        """
+        self._log.info("Updating MPD database...")
+
+        try:
+            s = BufferedSocket(host, port)
+        except OSError:
+            self._log.warning("MPD connection failed", exc_info=True)
+            return
+
+        resp = s.readline()
+        if b"OK MPD" not in resp:
+            self._log.warning("MPD connection failed: {0!r}", resp)
+            return
+
+        if password:
+            s.send(f'password "{password}"\n'.encode())
+            resp = s.readline()
+            if b"OK" not in resp:
+                self._log.warning("Authentication failed: {0!r}", resp)
+                s.send(b"close\n")
+                s.close()
+                return
+
+        s.send(b"update\n")
+        resp = s.readline()
+        if b"updating_db" not in resp:
+            self._log.warning("Update failed: {0!r}", resp)
+
+        s.send(b"close\n")
+        s.close()
+        self._log.info("Database updated.")

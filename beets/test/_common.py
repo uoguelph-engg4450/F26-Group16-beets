@@ -1,0 +1,196 @@
+"""Some common functionality for beets' test cases."""
+
+from __future__ import annotations
+
+import os
+import sys
+from contextlib import contextmanager
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import beets
+import beets.library
+
+# Make sure the development versions of the plugins are used
+from beets import importer, logging
+from beets.ui import commands
+from beets.util import syspath
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
+
+    import pytest
+
+    from beets.dbcore import Query
+    from beets.library import Item, Library
+
+# Test resources path.
+RSRC = (Path(__file__).parent.parent.parent / "test" / "rsrc").resolve()
+PLUGINPATH = str(RSRC / "beetsplug")
+
+# Propagate to root logger so the test runner can capture it
+log = logging.getLogger("beets")
+log.propagate = True
+log.setLevel(logging.DEBUG)
+
+# OS feature test.
+HAVE_SYMLINK = sys.platform != "win32"
+HAVE_HARDLINK = sys.platform != "win32"
+
+
+def item(lib: Library | None = None, **kwargs) -> Item:
+    defaults = dict(
+        title="the title",
+        artist="the artist",
+        albumartist="the album artist",
+        album="the album",
+        genres=["the genre"],
+        lyricists=["the lyricist"],
+        composers=["the composer"],
+        arrangers=["the arranger"],
+        grouping="the grouping",
+        work="the work title",
+        mb_workid="the work musicbrainz id",
+        work_disambig="the work disambiguation",
+        year=1,
+        month=2,
+        day=3,
+        track=4,
+        tracktotal=5,
+        disc=6,
+        disctotal=7,
+        lyrics="the lyrics",
+        comments="the comments",
+        bpm=8,
+        comp=True,
+        length=60.0,
+        bitrate=128000,
+        format="FLAC",
+        mb_trackid="someID-1",
+        mb_albumid="someID-2",
+        mb_artistid="someID-3",
+        mb_albumartistid="someID-4",
+        mb_releasetrackid="someID-5",
+        album_id=None,
+        mtime=12345,
+    )
+    i = beets.library.Item(**{**defaults, **kwargs})
+    if lib:
+        lib.add(i)
+    return i
+
+
+# Dummy import session.
+def import_session(
+    lib: Library,
+    loghandler: logging.Handler | None = None,
+    paths: Sequence[bytes] | None = None,
+    query: str | Sequence[str] | Query | None = None,
+    cli: bool = False,
+) -> importer.ImportSession:
+    cls = (
+        commands.import_.session.TerminalImportSession
+        if cli
+        else importer.ImportSession
+    )
+    return cls(lib, loghandler, paths, query)
+
+
+# Mock I/O.
+
+
+class InputError(IOError):
+    def __str__(self) -> str:
+        return "Attempt to read with no input provided."
+
+
+class DummyIn:
+    encoding = "utf-8"
+
+    def __init__(self) -> None:
+        self.buf: list[str] = []
+
+    def add(self, s: str) -> None:
+        self.buf.append(f"{s}\n")
+
+    def close(self) -> None:
+        pass
+
+    def readline(self) -> str:
+        if not self.buf:
+            raise InputError
+
+        return self.buf.pop(0)
+
+
+class DummyIO:
+    """Test helper that manages standard input and output."""
+
+    def __init__(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capteesys: pytest.CaptureFixture[str],
+    ) -> None:
+        self._capteesys = capteesys
+        self.stdin = DummyIn()
+
+        monkeypatch.setattr("sys.stdin", self.stdin)
+
+    def addinput(self, text: str) -> None:
+        """Simulate user typing into stdin."""
+        self.stdin.add(text)
+
+    def getoutput(self) -> str:
+        """Get the standard output captured so far.
+
+        Note: it clears the internal buffer, so subsequent calls will only
+        return *new* output.
+        """
+        # Using capteesys allows you to see output in the console if the test fails
+        return self._capteesys.readouterr().out
+
+
+# Utility.
+
+
+def touch(path: bytes) -> None:
+    open(syspath(path), "a").close()
+
+
+# Platform mocking.
+
+
+@contextmanager
+def platform_windows() -> Iterator[None]:
+    import ntpath
+
+    old_path = os.path
+    try:
+        os.path = ntpath
+        yield
+    finally:
+        os.path = old_path
+
+
+@contextmanager
+def platform_posix() -> Iterator[None]:
+    import posixpath
+
+    old_path = os.path
+    try:
+        os.path = posixpath
+        yield
+    finally:
+        os.path = old_path
+
+
+@contextmanager
+def system_mock(name: str) -> Iterator[None]:
+    import platform
+
+    old_system = platform.system
+    platform.system = lambda: name
+    try:
+        yield
+    finally:
+        platform.system = old_system

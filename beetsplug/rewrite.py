@@ -1,0 +1,96 @@
+"""Uses user-specified rewriting rules to canonicalize names for path
+formats.
+"""
+
+from __future__ import annotations
+
+import re
+from collections import defaultdict
+from functools import singledispatch
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from beets import library
+from beets.exceptions import UserError
+from beets.plugins import BeetsPlugin
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from beets.library import LibModel
+
+
+T = TypeVar("T")
+
+
+@singledispatch
+def rewrite_value(value: Any, pat: re.Pattern[str], repl: str) -> Any:
+    """Rewrite a value if it matches the given pattern."""
+    return value
+
+
+@rewrite_value.register
+def _(value: str, pat: re.Pattern[str], repl: str) -> str:
+    if pat.match(value.lower()):
+        return repl
+    return value
+
+
+@rewrite_value.register(list)
+def _(value: Iterable[str], pat: re.Pattern[str], repl: str) -> list[str]:
+    return [rewrite_value(v, pat, repl) for v in value]
+
+
+def apply_rewrite_rules(
+    value: T, rules: Iterable[tuple[re.Pattern[str], str]]
+) -> T:
+    """Apply all matching rewrite rules to the given value."""
+    for pattern, replacement in rules:
+        value = rewrite_value(value, pattern, replacement)
+
+    return value
+
+
+def rewriter(
+    field: str, rules: Iterable[tuple[re.Pattern[str], str]]
+) -> Callable[[LibModel], str]:
+    """Create a template field function that rewrites the given field
+    with the given rewriting rules. ``rules`` must be a list of
+    (pattern, replacement) pairs.
+    """
+
+    def fieldfunc(item: LibModel) -> str:
+        return apply_rewrite_rules(item._values_fixed[field], rules)
+
+    return fieldfunc
+
+
+class RewritePlugin(BeetsPlugin):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.config.add({})
+
+        # Gather all the rewrite rules for each field.
+        rules = defaultdict(list)
+        for key, view in self.config.items():
+            value = view.as_str()
+            try:
+                fieldname, pattern = key.split(None, 1)
+            except ValueError:
+                raise UserError("invalid rewrite specification")
+            if fieldname not in library.Item._fields:
+                raise UserError(f"invalid field name ({fieldname}) in rewriter")
+            self._log.debug("adding template field {}", key)
+            compiled_pattern = re.compile(pattern.lower())
+            rules[fieldname].append((compiled_pattern, value))
+            if fieldname == "artist":
+                # Special case for the artist field: apply the same
+                # rewrite for "albumartist" as well.
+                rules["albumartist"].append((compiled_pattern, value))
+
+        # Replace each template field with the new rewriter function.
+        for fieldname, fieldrules in rules.items():
+            getter = rewriter(fieldname, fieldrules)
+            self.template_fields[fieldname] = getter
+            if fieldname in library.Album._fields:
+                self.album_template_fields[fieldname] = getter

@@ -1,0 +1,562 @@
+"""Simple but robust implementation of generator/coroutine-based
+pipelines in Python. The pipelines may be run either sequentially
+(single-threaded) or in parallel (one thread per pipeline stage).
+
+This implementation supports pipeline bubbles (indications that the
+processing for a certain item should abort). To use them, yield the
+BUBBLE constant from any stage coroutine except the last.
+
+In the parallel case, the implementation transparently handles thread
+shutdown when the processing is complete and when a stage raises an
+exception. KeyboardInterrupts (^C) are also handled.
+
+When running a parallel pipeline, it is also possible to use
+multiple coroutines for the same pipeline stage; this lets you speed
+up a bottleneck stage by dividing its work among multiple threads.
+To do so, pass an iterable of coroutines to the Pipeline constructor
+in place of any single coroutine.
+"""
+
+from __future__ import annotations
+
+import contextvars
+import queue
+import sys
+from threading import Lock, Thread
+from typing import TYPE_CHECKING, Any, Generic, overload
+
+from typing_extensions import ParamSpec, TypeVar, TypeVarTuple, Unpack
+
+if TYPE_CHECKING:
+    from collections.abc import (
+        Callable,
+        Generator,
+        Iterable,
+        Iterator,
+        Sequence,
+        Sized,
+    )
+    from types import TracebackType
+
+    ExcInfo = tuple[
+        type[BaseException] | None, BaseException | None, TracebackType | None
+    ]
+
+BUBBLE = "__PIPELINE_BUBBLE__"
+POISON = "__PIPELINE_POISON__"
+
+DEFAULT_QUEUE_SIZE = 16
+
+Tq = TypeVar("Tq")
+Tstage = TypeVar("Tstage", bound="Generator[Any, Any, Any]")
+Tpull = TypeVar("Tpull")
+P = ParamSpec("P")
+Tout = TypeVar("Tout")
+
+
+def _invalidate_queue(
+    q: queue.Queue[Any], val: Any | None = None, sync: bool = True
+) -> None:
+    """Breaks a Queue such that it never blocks, always has size 1,
+    and has no maximum size. get()ing from the queue returns `val`,
+    which defaults to None. `sync` controls whether a lock is
+    required (because it's not reentrant!).
+    """
+
+    def _qsize(len: Callable[[Sized], int] = len) -> int:  # noqa: A002
+        return 1
+
+    def _put(item: Any) -> None:
+        pass
+
+    def _get() -> Any:
+        return val
+
+    if sync:
+        q.mutex.acquire()
+
+    try:
+        # Originally, we set `maxsize` to 0 here, which is supposed to mean
+        # an unlimited queue size. However, there is a race condition since
+        # Python 3.2 when this attribute is changed while another thread is
+        # waiting in put()/get() due to a full/empty queue.
+        # Setting it to 2 is still hacky because Python does not give any
+        # guarantee what happens if Queue methods/attributes are overwritten
+        # when it is already in use. However, because of our dummy _put()
+        # and _get() methods, it provides a workaround to let the queue appear
+        # to be never empty or full.
+        # See issue https://github.com/beetbox/beets/issues/2078
+        q_any = q
+        q_any.maxsize = 2
+        q_any._qsize = _qsize  # type: ignore[method-assign]
+        q_any._put = _put  # type: ignore[method-assign]
+        q_any._get = _get  # type: ignore[method-assign]
+        q.not_empty.notify_all()
+        q.not_full.notify_all()
+
+    finally:
+        if sync:
+            q.mutex.release()
+
+
+class CountedQueue(queue.Queue[Tq]):
+    """A queue that keeps track of the number of threads that are
+    still feeding into it. The queue is poisoned when all threads are
+    finished with the queue.
+    """
+
+    def __init__(self, maxsize: int = 0) -> None:
+        queue.Queue.__init__(self, maxsize)
+        self.nthreads = 0
+        self.poisoned = False
+
+    def acquire(self) -> None:
+        """Indicate that a thread will start putting into this queue.
+        Should not be called after the queue is already poisoned.
+        """
+        with self.mutex:
+            assert not self.poisoned
+            assert self.nthreads >= 0
+            self.nthreads += 1
+
+    def release(self) -> None:
+        """Indicate that a thread that was putting into this queue has
+        exited. If this is the last thread using the queue, the queue
+        is poisoned.
+        """
+        with self.mutex:
+            self.nthreads -= 1
+            assert self.nthreads >= 0
+            if self.nthreads == 0:
+                # All threads are done adding to this queue. Poison it
+                # when it becomes empty.
+                self.poisoned = True
+
+                # Replacement _get invalidates when no items remain.
+                _old_get = self._get
+
+                def _get() -> Tq:
+                    out = _old_get()
+                    if not self.queue:
+                        _invalidate_queue(self, POISON, False)
+                    return out
+
+                if self.queue:
+                    # Items remain.
+                    self._get = _get  # type: ignore[method-assign]
+                else:
+                    # No items. Invalidate immediately.
+                    _invalidate_queue(self, POISON, False)
+
+
+class MultiMessage:
+    """A message yielded by a pipeline stage encapsulating multiple
+    values to be sent to the next stage.
+    """
+
+    def __init__(self, messages: Iterable[Any]) -> None:
+        self.messages = messages
+
+
+def multiple(messages: Iterable[Tq]) -> MultiMessage:
+    """Yield multiple([message, ..]) from a pipeline stage to send
+    multiple values to the next pipeline stage.
+    """
+    return MultiMessage(messages)
+
+
+StagePrefix = TypeVarTuple("StagePrefix")
+A = TypeVarTuple("A")  # Arguments of a function (omitting the task)
+T = TypeVar("T")  # Type of the task
+# Normally these are concatenated i.e. (*args, task)
+
+# Return type of the function (should normally be task but sadly
+# we cant enforce this with the current stage functions without
+# a refactor)
+R = TypeVar("R")
+
+
+def stage(
+    func: Callable[[Unpack[A], T], R | None],
+) -> Callable[[Unpack[A]], Generator[Any, T, None]]:
+    """Decorate a function to become a simple stage.
+
+    >>> @stage
+    ... def add(n: int, i: int):
+    ...     return i + n
+    >>> pipe = Pipeline([
+    ...     iter([1, 2, 3]),
+    ...     add(2),
+    ... ])
+    >>> list(pipe.pull())
+    [3, 4, 5]
+    """
+
+    def coro(*args: Unpack[A]) -> Generator[R | T | None, T, None]:
+        task: R | T | None = None
+        while True:
+            task = yield task
+            task = func(*args, task)
+
+    return coro
+
+
+def mutator_stage(
+    func: Callable[[Unpack[A], T], R],
+) -> Callable[[Unpack[A]], Generator[T | None, T, None]]:
+    """Decorate a function that manipulates items in a coroutine to
+    become a simple stage.
+
+    >>> @mutator_stage
+    ... def setkey(key, item):
+    ...     item[key] = True
+    >>> pipe = Pipeline([
+    ...     iter([{'x': False}, {'a': False}]),
+    ...     setkey('x'),
+    ... ])
+    >>> list(pipe.pull())
+    [{'x': True}, {'a': False, 'x': True}]
+    """
+
+    def coro(*args: Unpack[A]) -> Generator[T | None, T, None]:
+        task = None
+        while True:
+            task = yield task
+            func(*args, task)
+
+    return coro
+
+
+def _allmsgs(obj: Any) -> Iterable[Any]:
+    """Returns a list of all the messages encapsulated in obj. If obj
+    is a MultiMessage, returns its enclosed messages. If obj is BUBBLE,
+    returns an empty list. Otherwise, returns a list containing obj.
+    """
+    if isinstance(obj, MultiMessage):
+        return obj.messages
+    if obj == BUBBLE:
+        return []
+    return [obj]
+
+
+class PipelineThread(Thread):
+    """Abstract base class for pipeline-stage threads."""
+
+    all_threads: Sequence[PipelineThread]
+
+    def __init__(
+        self,
+        all_threads: Sequence[PipelineThread],
+        ctx: contextvars.Context | None = None,
+    ) -> None:
+        super().__init__()
+        self.abort_lock = Lock()
+        self.abort_flag = False
+        self.all_threads = all_threads
+        self.exc_info: ExcInfo | None = None
+        self.ctx = ctx
+
+    def _run_in_context(
+        self, func: Callable[P, Tout], *args: P.args, **kwargs: P.kwargs
+    ) -> Tout:
+        if self.ctx is None:
+            return func(*args, **kwargs)
+        return self.ctx.run(func, *args, **kwargs)
+
+    def abort(self) -> None:
+        """Shut down the thread at the next chance possible."""
+        with self.abort_lock:
+            self.abort_flag = True
+
+            # Ensure that we are not blocking on a queue read or write.
+            if hasattr(self, "in_queue"):
+                _invalidate_queue(self.in_queue, POISON)
+            if hasattr(self, "out_queue"):
+                _invalidate_queue(self.out_queue, POISON)
+
+    def abort_all(self, exc_info: ExcInfo) -> None:
+        """Abort all other threads in the system for an exception."""
+        self.exc_info = exc_info
+        for thread in self.all_threads:
+            thread.abort()
+
+
+class FirstPipelineThread(PipelineThread):
+    """The thread running the first stage in a parallel pipeline setup.
+    The coroutine should just be a generator.
+    """
+
+    def __init__(
+        self,
+        coro: Iterator[Any],
+        out_queue: CountedQueue[Any],
+        all_threads: Sequence[PipelineThread],
+        ctx: contextvars.Context | None = None,
+    ) -> None:
+        super().__init__(all_threads, ctx)
+        self.coro = coro
+        self.out_queue = out_queue
+        self.out_queue.acquire()
+
+    def run(self) -> None:
+        try:
+            while True:
+                with self.abort_lock:
+                    if self.abort_flag:
+                        return
+
+                # Get the value from the generator.
+                try:
+                    msg = self._run_in_context(next, self.coro)
+                except StopIteration:
+                    break
+
+                # Send messages to the next stage.
+                for msg in _allmsgs(msg):
+                    with self.abort_lock:
+                        if self.abort_flag:
+                            return
+                    self.out_queue.put(msg)
+
+        except BaseException:
+            self.abort_all(sys.exc_info())
+            return
+
+        # Generator finished; shut down the pipeline.
+        self.out_queue.release()
+
+
+class MiddlePipelineThread(PipelineThread):
+    """A thread running any stage in the pipeline except the first or
+    last.
+    """
+
+    def __init__(
+        self,
+        coro: Generator[Any, Any, Any],
+        in_queue: CountedQueue[Any],
+        out_queue: CountedQueue[Any],
+        all_threads: Sequence[PipelineThread],
+        ctx: contextvars.Context | None = None,
+    ) -> None:
+        super().__init__(all_threads, ctx)
+        self.coro = coro
+        self.in_queue = in_queue
+        self.out_queue = out_queue
+        self.out_queue.acquire()
+
+    def run(self) -> None:
+        try:
+            # Prime the coroutine.
+            self._run_in_context(next, self.coro)
+
+            while True:
+                with self.abort_lock:
+                    if self.abort_flag:
+                        return
+
+                # Get the message from the previous stage.
+                msg = self.in_queue.get()
+                if msg is POISON:
+                    break
+
+                with self.abort_lock:
+                    if self.abort_flag:
+                        return
+
+                # Invoke the current stage.
+                out = self._run_in_context(self.coro.send, msg)
+
+                # Send messages to next stage.
+                for msg in _allmsgs(out):
+                    with self.abort_lock:
+                        if self.abort_flag:
+                            return
+                    self.out_queue.put(msg)
+
+        except BaseException:
+            self.abort_all(sys.exc_info())
+            return
+
+        # Pipeline is shutting down normally.
+        self.out_queue.release()
+
+
+class LastPipelineThread(PipelineThread):
+    """A thread running the last stage in a pipeline. The coroutine
+    should yield nothing.
+    """
+
+    def __init__(
+        self,
+        coro: Generator[Any, Any, Any],
+        in_queue: CountedQueue[Any],
+        all_threads: Sequence[PipelineThread],
+        ctx: contextvars.Context | None = None,
+    ) -> None:
+        super().__init__(all_threads, ctx)
+        self.coro = coro
+        self.in_queue = in_queue
+
+    def run(self) -> None:
+        # Prime the coroutine.
+        self._run_in_context(next, self.coro)
+
+        try:
+            while True:
+                with self.abort_lock:
+                    if self.abort_flag:
+                        return
+
+                # Get the message from the previous stage.
+                msg = self.in_queue.get()
+                if msg is POISON:
+                    break
+
+                with self.abort_lock:
+                    if self.abort_flag:
+                        return
+
+                # Send to consumer.
+                self._run_in_context(self.coro.send, msg)
+
+        except BaseException:
+            self.abort_all(sys.exc_info())
+            return
+
+
+class Pipeline(Generic[Tpull, Tstage]):
+    """Represents a staged pattern of work. Each stage in the pipeline
+    is a coroutine that receives messages from the previous stage and
+    yields messages to be sent to the next stage.
+    """
+
+    @overload
+    def __init__(
+        self, stages: tuple[Unpack[StagePrefix], Generator[Tpull, Any, Any]]
+    ) -> None: ...
+
+    @overload
+    def __init__(self, stages: Sequence[Any]) -> None: ...
+
+    def __init__(self, stages: Sequence[Any]) -> None:
+        """Makes a new pipeline from a list of coroutines. There must
+        be at least two stages.
+        """
+        if len(stages) < 2:
+            raise ValueError("pipeline must have at least two stages")
+
+        first_stage = stages[0]
+        if isinstance(first_stage, (list, tuple)):
+            self.first_stage: Sequence[Any] = first_stage
+        else:
+            self.first_stage = (first_stage,)
+
+        self.stages: list[Sequence[Tstage]] = []
+        for stage in stages[1:]:
+            if isinstance(stage, (list, tuple)):
+                self.stages.append(stage)
+            else:
+                # Default to one thread per stage.
+                self.stages.append((stage,))
+
+    def run_sequential(self) -> None:
+        """Run the pipeline sequentially in the current thread. The
+        stages are run one after the other. Only the first coroutine
+        in each stage is used.
+        """
+        list(self.pull())
+
+    def run_parallel(self, queue_size: int = DEFAULT_QUEUE_SIZE) -> None:
+        """Run the pipeline in parallel using one thread per stage. The
+        messages between the stages are stored in queues of the given
+        size.
+        """
+        base_ctx = contextvars.copy_context()
+        queue_count = len(self.stages)
+        queues: list[CountedQueue[Any]] = [
+            CountedQueue(queue_size) for i in range(queue_count)
+        ]
+        threads: list[PipelineThread] = []
+
+        # Set up first stage.
+        for coro in self.first_stage:
+            # Each worker needs its own copy because Context objects cannot be
+            # entered concurrently from multiple threads.
+            threads.append(
+                FirstPipelineThread(coro, queues[0], threads, base_ctx.copy())
+            )
+
+        # Middle stages.
+        for i in range(queue_count - 1):
+            for coro in self.stages[i]:
+                threads.append(
+                    MiddlePipelineThread(
+                        coro, queues[i], queues[i + 1], threads, base_ctx.copy()
+                    )
+                )
+
+        # Last stage.
+        for coro in self.stages[-1]:
+            threads.append(
+                LastPipelineThread(coro, queues[-1], threads, base_ctx.copy())
+            )
+
+        # Start threads.
+        for thread in threads:
+            thread.start()
+
+        # Wait for termination. The final thread lasts the longest.
+        try:
+            # Using a timeout allows us to receive KeyboardInterrupt
+            # exceptions during the join().
+            while threads[-1].is_alive():
+                threads[-1].join(1)
+
+        except BaseException:
+            # Stop all the threads immediately.
+            for thread in threads:
+                thread.abort()
+            raise
+
+        finally:
+            # Make completely sure that all the threads have finished
+            # before we return. They should already be either finished,
+            # in normal operation, or aborted, in case of an exception.
+            for thread in threads[:-1]:
+                thread.join()
+
+        for thread in threads:
+            exc_info = thread.exc_info
+            if exc_info:
+                exc = exc_info[1]
+                assert exc is not None
+                # Make the exception appear as it was raised originally.
+                raise exc.with_traceback(exc_info[2])
+
+    def pull(self) -> Iterator[Tpull]:
+        """Yield elements from the end of the pipeline. Runs the stages
+        sequentially until the last yields some messages. Each of the messages
+        is then yielded by ``pulled.next()``. If the pipeline has a consumer,
+        that is the last stage does not yield any messages, then pull will not
+        yield any messages. Only the first coroutine in each stage is used
+        """
+        coros: list[Any] = [self.first_stage[0]]
+        for stage in self.stages:
+            coros.append(stage[0])
+
+        # "Prime" the coroutines.
+        for coro in coros[1:]:
+            next(coro)
+
+        # Begin the pipeline.
+        for out in coros[0]:
+            msgs = _allmsgs(out)
+            for coro in coros[1:]:
+                next_msgs: list[Any] = []
+                for msg in msgs:
+                    out = coro.send(msg)
+                    next_msgs.extend(_allmsgs(out))
+                msgs = next_msgs
+            for msg in msgs:
+                yield msg

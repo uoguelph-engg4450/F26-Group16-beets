@@ -1,0 +1,246 @@
+"""Shows file metadata."""
+
+from __future__ import annotations
+
+import os
+from typing import TYPE_CHECKING, Any, Literal, Protocol
+
+import mediafile
+
+from beets import ui
+from beets.library import Item
+from beets.plugins import BeetsPlugin
+from beets.util import displayable_path, normpath, syspath
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator, Sequence
+
+    from beets.library import LibModel, Library
+
+    from ._typing import JSONDict
+
+    DataEmitter = Callable[
+        [Literal["*"] | list[str]], tuple[JSONDict, LibModel]
+    ]
+
+
+class InfoCLIOpts(Protocol):
+    album: bool
+    format: str | None
+    included_keys: list[str]
+    keys_only: bool | None
+    library: bool | None
+    summarize: bool | None
+
+
+def tag_data(
+    lib: Library, args: Iterable[str], album: bool = False
+) -> Iterator[DataEmitter]:
+    query = []
+    for arg in args:
+        path = normpath(arg)
+        if os.path.isfile(syspath(path)):
+            yield tag_data_emitter(path)
+        else:
+            query.append(arg)
+
+    if query:
+        for item in lib.items(query):
+            yield tag_data_emitter(item.path)
+
+
+def tag_fields() -> set[str]:
+    fields = set(mediafile.MediaFile.readable_fields())
+    fields.add("art")
+    return fields
+
+
+def tag_data_emitter(path: bytes) -> DataEmitter:
+    def emitter(
+        included_keys: Literal["*"] | list[str],
+    ) -> tuple[JSONDict, LibModel]:
+        fields: set[str] | list[str]
+        if included_keys == "*":
+            fields = tag_fields()
+        else:
+            fields = included_keys
+        if "images" in fields:
+            # We can't serialize the image data.
+            fields.remove("images")
+        mf = mediafile.MediaFile(syspath(path))
+        tags: JSONDict = {}
+        for field in fields:
+            if field == "art":
+                tags[field] = mf.art is not None
+            else:
+                tags[field] = getattr(mf, field, None)
+
+        # create a temporary Item to take advantage of __format__
+        item = Item.from_path(syspath(path))
+
+        return tags, item
+
+    return emitter
+
+
+def library_data(
+    lib: Library, args: Sequence[str], album: bool = False
+) -> Iterator[DataEmitter]:
+    for item in lib.albums(args) if album else lib.items(args):
+        yield library_data_emitter(item)
+
+
+def library_data_emitter(model: LibModel) -> DataEmitter:
+    def emitter(
+        included_keys: Literal["*"] | list[str],
+    ) -> tuple[JSONDict, LibModel]:
+        data = dict(model.formatted(included_keys=included_keys))
+
+        return data, model
+
+    return emitter
+
+
+def update_summary(summary: JSONDict, tags: JSONDict) -> JSONDict:
+    for key, value in tags.items():
+        if key not in summary:
+            summary[key] = value
+        elif summary[key] != value:
+            summary[key] = "[various]"
+    return summary
+
+
+def print_data(
+    data: JSONDict, item: LibModel | None = None, fmt: str | None = None
+) -> None:
+    """Print, with optional formatting, the fields of a single element.
+
+    If no format string `fmt` is passed, the entries on `data` are printed one
+    in each line, with the format 'field: value'. If `fmt` is not `None`, the
+    `item` is printed according to `fmt`, using the `Item.__format__`
+    machinery.
+    """
+    if fmt:
+        # use fmt specified by the user
+        ui.print_(format(item, fmt))
+        return
+
+    path = displayable_path(item.path) if item else None
+    formatted = {}
+    for key, value in data.items():
+        if isinstance(value, list):
+            formatted[key] = "; ".join(value)
+        if value is not None:
+            formatted[key] = value
+
+    if len(formatted) == 0:
+        return
+
+    maxwidth = max(len(key) for key in formatted)
+
+    if path:
+        ui.print_(displayable_path(path))
+
+    for field in sorted(formatted):
+        value = formatted[field]
+        if isinstance(value, list):
+            value = "; ".join(value)
+        ui.print_(f"{field:>{maxwidth}}: {value}")
+
+
+def print_data_keys(data: JSONDict, item: LibModel | None = None) -> None:
+    """Print only the keys (field names) for an item."""
+    path = displayable_path(item.path) if item else None
+    formatted = []
+    for key, value in data.items():
+        formatted.append(key)
+
+    if len(formatted) == 0:
+        return
+
+    if path:
+        ui.print_(displayable_path(path))
+
+    for field in sorted(formatted):
+        ui.print_(f"    {field}")
+
+
+class InfoPlugin(BeetsPlugin):
+    def commands(self) -> list[ui.Subcommand]:
+        cmd = ui.Subcommand("info", help="show file metadata")
+        cmd.func = self.run
+        cmd.parser.add_album_option()
+        cmd.parser.add_option(
+            "-l",
+            "--library",
+            action="store_true",
+            help="show library fields instead of tags",
+        )
+        cmd.parser.add_option(
+            "-s",
+            "--summarize",
+            action="store_true",
+            help="summarize the tags of all files",
+        )
+        cmd.parser.add_option(
+            "-i",
+            "--include-keys",
+            default=[],
+            action="append",
+            dest="included_keys",
+            help="comma separated list of keys to show",
+        )
+        cmd.parser.add_option(
+            "-k", "--keys-only", action="store_true", help="show only the keys"
+        )
+        cmd.parser.add_format_option(target="item")
+        return [cmd]
+
+    def run(self, lib: Library, opts: InfoCLIOpts, args: list[str]) -> None:
+        """Print tag info or library data for each file referenced by args.
+
+        Main entry point for the `beet info ARGS...` command.
+
+        If an argument is a path pointing to an existing file, then the tags
+        of that file are printed. All other arguments are considered
+        queries, and for each item matching all those queries the tags from
+        the file are printed.
+
+        If `opts.summarize` is true, the function merges all tags into one
+        dictionary and only prints that. If two files have different values
+        for the same tag, the value is set to '[various]'
+        """
+        if opts.library or opts.album:
+            data_collector = library_data
+        else:
+            data_collector = tag_data
+
+        included_keys = []
+        for keys in opts.included_keys:
+            included_keys.extend(keys.split(","))
+        # Drop path even if user provides it multiple times
+        included_keys = [k for k in included_keys if k != "path"]
+
+        first = True
+        summary: dict[str, Any] = {}
+        for data_emitter in data_collector(lib, args, album=opts.album):
+            try:
+                data, item = data_emitter(included_keys or "*")
+            except (mediafile.UnreadableFileError, OSError) as ex:
+                self._log.error("cannot read file: {}", ex)
+                continue
+
+            if opts.summarize:
+                update_summary(summary, data)
+            else:
+                if not first:
+                    ui.print_()
+                if opts.keys_only:
+                    print_data_keys(data, item)
+                else:
+                    fmt = [opts.format][0] if opts.format else None
+                    print_data(data, item, fmt)
+                first = False
+
+        if opts.summarize:
+            print_data(summary)

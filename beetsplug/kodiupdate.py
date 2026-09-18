@@ -1,0 +1,94 @@
+"""Updates a Kodi library whenever the beets library is changed.
+This is based on the Plex Update plugin.
+
+Put something like the following in your config.yaml to configure:
+    kodi:
+        host: localhost
+        port: 8080
+        user: user
+        pwd: secret
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import requests
+
+from beets.plugins import BeetsPlugin
+
+if TYPE_CHECKING:
+    from beets.library import LibModel, Library
+
+
+def update_kodi(
+    host: str, port: int, user: str, password: str
+) -> requests.Response:
+    """Sends request to the Kodi api to start a library refresh."""
+    url = f"http://{host}:{port}/jsonrpc"
+
+    """Content-Type: application/json is mandatory
+    according to the kodi jsonrpc documentation"""
+
+    headers = {"Content-Type": "application/json"}
+
+    # Create the payload. Id seems to be mandatory.
+    payload = {"jsonrpc": "2.0", "method": "AudioLibrary.Scan", "id": 1}
+    return requests.post(
+        url, auth=(user, password), json=payload, headers=headers, timeout=10
+    )
+
+
+class KodiUpdate(BeetsPlugin):
+    def __init__(self) -> None:
+        super().__init__("kodi")
+
+        # Adding defaults.
+        self.config.add(
+            [{"host": "localhost", "port": 8080, "user": "kodi", "pwd": "kodi"}]
+        )
+
+        self.config["user"].redact = True
+        self.config["pwd"].redact = True
+        self.register_listener("database_change", self.listen_for_db_change)
+
+    def listen_for_db_change(self, lib: Library, model: LibModel) -> None:
+        """Listens for beets db change and register the update"""
+        self.register_listener("cli_exit", self.update)
+
+    def update(self, lib: Library) -> None:
+        """When the client exists try to send refresh request to Kodi server."""
+        self._log.info("Requesting a Kodi library update...")
+
+        kodi = self.config.get()
+
+        # Backwards compatibility in case not configured as an array
+        if not isinstance(kodi, list):
+            kodi = [kodi]
+
+        for instance in kodi:
+            # Try to send update request.
+            try:
+                r = update_kodi(
+                    instance["host"],
+                    instance["port"],
+                    instance["user"],
+                    instance["pwd"],
+                )
+                r.raise_for_status()
+
+                json = r.json()
+                if json.get("result") != "OK":
+                    self._log.warning(
+                        "Kodi update failed: JSON response was {0!r}", json
+                    )
+                    continue
+
+                self._log.info(
+                    "Kodi update triggered for {}:{}",
+                    instance["host"],
+                    instance["port"],
+                )
+            except requests.exceptions.RequestException as e:
+                self._log.warning("Kodi update failed: {}", str(e))
+                continue

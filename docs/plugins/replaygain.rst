@@ -1,0 +1,244 @@
+ReplayGain Plugin
+=================
+
+This plugin adds support for ReplayGain_, a technique for normalizing audio
+playback levels.
+
+.. _replaygain: https://wiki.hydrogenaudio.org/index.php?title=ReplayGain
+
+Installation
+------------
+
+This plugin can use one of many backends to compute the ReplayGain values:
+GStreamer, mp3gain (and its cousins, aacgain and mp3rgain), Python Audio Tools,
+ffmpeg or metaflac. ffmpeg and mp3gain can be easier to install. mp3gain
+supports fewer audio formats than the other backends, and metaflac only supports
+FLAC.
+
+Once installed, this plugin analyzes all files during the import process. This
+can be a slow process; to instead analyze after the fact, disable automatic
+analysis and use the ``beet replaygain`` command (see below).
+
+To speed up analysis with some of the available backends, this plugin processes
+tracks or albums (when using the ``-a`` option) in parallel. By default, a
+single thread is used per logical core of your CPU.
+
+GStreamer
+~~~~~~~~~
+
+To use GStreamer_ for ReplayGain analysis, you will of course need to install
+GStreamer and plugins for compatibility with your audio files. You will need at
+least GStreamer 1.0 and `PyGObject 3.x`_ (a.k.a. ``python-gi``).
+
+.. _gstreamer: https://gstreamer.freedesktop.org/
+
+.. _pygobject 3.x: https://pygobject.gnome.org/
+
+Then, install ``beets`` with ``replaygain`` extra which installs ``GStreamer``
+bindings for Python
+
+.. code-block:: bash
+
+    pip install "beets[replaygain]"
+
+Lastly, enable the ``replaygain`` plugin in your configuration (see
+:ref:`using-plugins`) and specify the GStreamer backend by adding this to your
+configuration file:
+
+::
+
+    replaygain:
+        backend: gstreamer
+
+The GStreamer backend does not support parallel analysis.
+
+Supported ``command`` backends
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to use this backend, you will need to install a supported command-line
+tool:
+
+- mp3gain_ (MP3 only)
+- aacgain_ (MP3, AAC/M4A)
+- mp3rgain_ (MP3, AAC/M4A)
+
+mp3gain
++++++++
+
+- On Linux, mp3gain_ is probably in your repositories. On Debian or Ubuntu, for
+  example, you can run ``apt-get install mp3gain``.
+- On Windows, download and install mp3gain_.
+
+aacgain
++++++++
+
+- On macOS, install via Homebrew_: ``brew install aacgain``.
+- For other platforms, download from aacgain_ or use a compatible fork if
+  available for your system.
+
+mp3rgain
+++++++++
+
+mp3rgain_ is a modern Rust rewrite of ``mp3gain`` that also supports AAC/M4A
+files. It addresses security vulnerability CVE-2019-18359 present in the
+original mp3gain and works on modern systems including Windows 11 and macOS with
+Apple Silicon.
+
+- On macOS, install via Homebrew_: ``brew install mp3rgain``.
+- On Linux, install via Nix: ``nix-env -iA nixpkgs.mp3rgain`` or from your
+  distribution packaging (for example, AUR on Arch Linux).
+- On Windows, download and install mp3rgain_.
+
+Configuration
++++++++++++++
+
+.. code-block:: yaml
+
+    replaygain:
+        backend: command
+        command: # mp3rgain, mp3gain, or aacgain
+
+If beets doesn't automatically find the command executable, you can configure
+the path explicitly like so:
+
+.. code-block:: yaml
+
+    replaygain:
+        command: /Applications/MacMP3Gain.app/Contents/Resources/aacgain
+
+.. _aacgain: https://github.com/dgilman/aacgain
+
+.. _homebrew: https://brew.sh
+
+.. _mp3gain: https://sourceforge.net/projects/mp3gain/download.php
+
+.. _mp3rgain: https://github.com/M-Igashi/mp3rgain
+
+Python Audio Tools
+~~~~~~~~~~~~~~~~~~
+
+This backend uses the `Python Audio Tools`_ package to compute ReplayGain for a
+range of different file formats. The package is not available via PyPI; it must
+be installed manually (only versions preceding 3.x are compatible).
+
+On OS X, most of the dependencies can be installed with Homebrew_:
+
+::
+
+    brew install mpg123 mp3gain vorbisgain faad2 libvorbis
+
+The Python Audio Tools backend does not support parallel analysis.
+
+.. _python audio tools: https://sourceforge.net/projects/audiotools/
+
+ffmpeg
+~~~~~~
+
+This backend uses ffmpeg to calculate EBU R128 gain values. To use it, install
+the ffmpeg_ command-line tool and select the ``ffmpeg`` backend in your config
+file.
+
+.. _ffmpeg: https://ffmpeg.org
+
+metaflac
+~~~~~~~~
+
+This backend uses the metaflac_ command-line tool (part of the FLAC tools) to
+compute ReplayGain values for FLAC files. It only supports FLAC; files in other
+formats are skipped. To use it, install the ``flac`` package, which provides
+``metaflac``, and select the ``metaflac`` backend in your configuration file:
+
+.. code-block:: yaml
+
+    replaygain:
+        backend: metaflac
+
+metaflac scans every file of an album in a single pass, so the files of an album
+need to share the same sample rate and channel layout.
+
+.. _metaflac: https://xiph.org/flac/documentation_tools_metaflac.html
+
+Configuration
+-------------
+
+To configure the plugin, make a ``replaygain:`` section in your configuration
+file. The available options are:
+
+- **auto**: Enable ReplayGain analysis during import. Default: ``yes``.
+- **threads**: The number of parallel threads to run the analysis in. Overridden
+  by ``--threads`` at the command line. Default: # of logical CPU cores
+- **parallel_on_import**: Whether to enable parallel analysis during import. As
+  of now this ReplayGain data is not written to files properly, so this option
+  is disabled by default. If you wish to enable it, remember to run ``beet
+  write`` after importing to actually write to the imported files. Default:
+  ``no``
+- **backend**: The analysis backend; either ``gstreamer``, ``command``,
+  ``audiotools``, ``ffmpeg`` or ``metaflac``. Default: ``command``.
+- **overwrite**: On import, re-analyze files that already have ReplayGain tags.
+  Note that, for historical reasons, the name of this option is somewhat
+  unfortunate: It does not decide whether tags are written to the files (which
+  is controlled by the :ref:`import.write <config-import-write>` option).
+  Default: ``no``.
+- **targetlevel**: A number of decibels for the target loudness level for files
+  using ``REPLAYGAIN_`` tags. Default: ``89``.
+- **r128_targetlevel**: The target loudness level in decibels (i.e. ``<loudness
+  in LUFS> + 107``) for files using ``R128_`` tags. Default: 84 (Use ``83`` for
+  ATSC A/85, ``84`` for EBU R128 or ``89`` for ReplayGain 2.0.)
+- **r128**: A space separated list of formats that will use ``R128_`` tags with
+  integer values instead of the common ``REPLAYGAIN_`` tags with floating point
+  values. Requires the "ffmpeg" backend. Default: ``Opus``.
+- **per_disc**: Calculate album ReplayGain on disc level instead of album level.
+  Default: ``no``
+
+These options only work with the "command" backend:
+
+- **command**: Name or path to your command backend of choice: either of
+  ``mp3gain``, ``aacgain`` or ``mp3rgain``.
+- **noclip**: Reduce the amount of ReplayGain adjustment to whatever amount
+  would keep clipping from occurring. Default: ``yes``.
+
+This option only works with the "ffmpeg" backend:
+
+- **peak**: Either ``true`` (the default) or ``sample``. ``true`` is more
+  accurate but slower.
+
+This option only works with the "metaflac" backend:
+
+- **metaflac**: Name or path to the ``metaflac`` executable. Default:
+  ``metaflac``.
+
+Manual Analysis
+---------------
+
+By default, the plugin will analyze all items an albums as they are implemented.
+However, you can also manually analyze files that are already in your library.
+Use the ``beet replaygain`` command:
+
+::
+
+    $ beet replaygain [-Waf] [QUERY]
+
+The ``-a`` flag analyzes whole albums instead of individual tracks. Provide a
+query (see :doc:`/reference/query`) to indicate which items or albums to
+analyze. Files that already have ReplayGain values are skipped unless ``-f`` is
+supplied. Use ``-w`` (write tags) or ``-W`` (don't write tags) to control
+whether ReplayGain tags are written into the music files, or stored in the beets
+database only (the default is to use :ref:`the importer's configuration
+<config-import-write>`).
+
+To execute with a different number of threads, call ``beet replaygain --threads
+N``:
+
+::
+
+    $ beet replaygain --threads N [-Waf] [QUERY]
+
+with N any integer. To disable parallelism, use ``--threads 0``.
+
+ReplayGain analysis is not fast, so you may want to disable it during import.
+Use the ``auto`` config option to control this:
+
+::
+
+    replaygain:
+        auto: no

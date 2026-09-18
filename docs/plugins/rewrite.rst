@@ -1,0 +1,63 @@
+Rewrite Plugin
+==============
+
+The ``rewrite`` plugin lets you easily substitute values in your templates and
+path formats. Specifically, it is intended to let you *canonicalize* names such
+as artists: for example, perhaps you want albums from The Jimi Hendrix
+Experience to be sorted into the same folder as solo Hendrix albums.
+
+To use field rewriting, first enable the ``rewrite`` plugin (see
+:ref:`using-plugins`). Then, make a ``rewrite:`` section in your config file to
+contain your rewrite rules. Each rule consists of a field name, a regular
+expression pattern, and a replacement value. Rules are written ``fieldname
+regex: replacement``. For example, this line implements the Jimi Hendrix example
+above:
+
+::
+
+    rewrite:
+        artist The Jimi Hendrix Experience: Jimi Hendrix
+
+This will make ``$artist`` in your templates expand to "Jimi Hendrix" where it
+would otherwise be "The Jimi Hendrix Experience".
+
+The pattern is a case-insensitive regular expression. This means you can use
+ordinary regular expression syntax to match multiple artists. For example, you
+might use:
+
+::
+
+    rewrite:
+        artist .*jimi hendrix.*: Jimi Hendrix
+
+Rules also apply to matching elements in multi-valued fields. For example, this
+rewrites the ``rock`` entry in ``genres`` while leaving other genre values
+unchanged:
+
+::
+
+    rewrite:
+        genres rock: Classic Rock
+
+Rules are applied in the order they appear in the config. This means a
+multi-valued field can have several entries rewritten by different rules:
+
+::
+
+    rewrite:
+        genres rock: Classic Rock
+        genres pop: Pop
+
+With this configuration, a ``genres`` value such as ``rock; pop; techno`` is
+rewritten to ``Classic Rock; Pop; techno``.
+
+As a convenience, the plugin applies patterns for the ``artist`` field to the
+``albumartist`` field as well. (Otherwise, you would probably want to duplicate
+every rule for ``artist`` and ``albumartist``.)
+
+A word of warning: This plugin theoretically only applies to templates and path
+formats; it initially does not modify files' metadata tags or the values tracked
+by beets' library database, but since it *rewrites all field lookups*, it
+modifies the file's metadata anyway. See comments in issue :bug:`2786`.
+
+As an alternative to this plugin the :doc:`/plugins/substitute` could be used.

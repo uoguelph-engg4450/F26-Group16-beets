@@ -1,0 +1,211 @@
+import mediafile
+from mediafile import MediaFile
+
+from beets import library
+from beets.plugins import BeetsPlugin
+from beets.test import _common
+from beets.test.helper import BeetsTestCase, IOMixin
+from beets.util import MoveOperation, remove
+
+
+class UpdateTest(IOMixin, BeetsTestCase):
+    def setUp(self):
+        super().setUp()
+
+        # Copy a file into the library.
+        item_path = _common.RSRC / "full.mp3"
+        item_path_two = _common.RSRC / "full.flac"
+        self.i = library.Item.from_path(item_path)
+        self.i2 = library.Item.from_path(item_path_two)
+        self.lib.add(self.i)
+        self.lib.add(self.i2)
+        self.i.move(operation=MoveOperation.COPY)
+        self.i2.move(operation=MoveOperation.COPY)
+        self.album = self.lib.add_album([self.i, self.i2])
+
+        # Album art.
+        artfile = self.temp_path / "testart.jpg"
+        artfile.touch()
+        self.album.set_art(artfile)
+        self.album.store()
+        artfile.unlink()
+
+    def _update(self, *args, reset_mtime=True):
+        self.io.addinput("y")
+        if reset_mtime:
+            self.i.mtime = 0
+            self.i.store()
+        self.run_command("update", *args)
+
+    def test_delete_removes_item(self):
+        assert list(self.lib.items())
+        remove(self.i.path)
+        remove(self.i2.path)
+        self._update()
+        assert not list(self.lib.items())
+
+    def test_delete_removes_album(self):
+        assert self.lib.albums()
+        remove(self.i.path)
+        remove(self.i2.path)
+        self._update()
+        assert not self.lib.albums()
+
+    def test_delete_removes_album_art(self):
+        art_filepath = self.album.art_filepath
+        assert art_filepath.exists()
+        remove(self.i.path)
+        remove(self.i2.path)
+        self._update()
+        assert not art_filepath.exists()
+
+    def test_modified_metadata_detected(self):
+        mf = MediaFile(self.i.filepath)
+        mf.title = "differentTitle"
+        mf.save()
+        self._update()
+        item = self.lib.items().get()
+        assert item.title == "differentTitle"
+
+    def test_modified_plugin_media_field_detected(self):
+        plugin = BeetsPlugin()
+        plugin.add_media_field(
+            "customtag",
+            mediafile.MediaField(
+                mediafile.MP3DescStorageStyle("customtag"),
+                mediafile.StorageStyle("customtag"),
+            ),
+        )
+
+        try:
+            mf = MediaFile(self.i.filepath)
+            mf.customtag = "F#"
+            mf.save()
+
+            self._update()
+
+            item = self.lib.get_item(self.i.id)
+            assert item["customtag"] == "F#"
+        finally:
+            delattr(mediafile.MediaFile, "customtag")
+            library.Item._media_fields.remove("customtag")
+
+    def test_modified_metadata_moved(self):
+        mf = MediaFile(self.i.filepath)
+        mf.title = "differentTitle"
+        mf.save()
+        self._update("-m")
+        item = self.lib.items().get()
+        assert b"differentTitle" in item.path
+
+    def test_modified_metadata_not_moved(self):
+        mf = MediaFile(self.i.filepath)
+        mf.title = "differentTitle"
+        mf.save()
+        self._update("--nomove")
+        item = self.lib.items().get()
+        assert b"differentTitle" not in item.path
+
+    def test_selective_modified_metadata_moved(self):
+        mf = MediaFile(self.i.filepath)
+        mf.title = "differentTitle"
+        mf.genres = ["differentGenre"]
+        mf.save()
+        self._update("-m", "--field=title")
+        item = self.lib.items().get()
+        assert b"differentTitle" in item.path
+        assert item.genres != ["differentGenre"]
+
+    def test_selective_modified_metadata_not_moved(self):
+        mf = MediaFile(self.i.filepath)
+        mf.title = "differentTitle"
+        mf.genres = ["differentGenre"]
+        mf.save()
+        self._update("--nomove", "--field=title")
+        item = self.lib.items().get()
+        assert b"differentTitle" not in item.path
+        assert item.genres != ["differentGenre"]
+
+    def test_modified_album_metadata_moved(self):
+        mf = MediaFile(self.i.filepath)
+        mf.album = "differentAlbum"
+        mf.save()
+        self._update("-m")
+        item = self.lib.items().get()
+        assert b"differentAlbum" in item.path
+
+    def test_modified_album_metadata_art_moved(self):
+        artpath = self.album.artpath
+        mf = MediaFile(self.i.filepath)
+        mf.album = "differentAlbum"
+        mf.save()
+        self._update("-m")
+        album = self.lib.albums()[0]
+        assert artpath != album.artpath
+        assert album.artpath is not None
+
+    def test_selective_modified_album_metadata_moved(self):
+        mf = MediaFile(self.i.filepath)
+        mf.album = "differentAlbum"
+        mf.genres = ["differentGenre"]
+        mf.save()
+        self._update("-m", "--field=album")
+        item = self.lib.items().get()
+        assert b"differentAlbum" in item.path
+        assert item.genres != ["differentGenre"]
+
+    def test_selective_modified_album_metadata_not_moved(self):
+        mf = MediaFile(self.i.filepath)
+        mf.album = "differentAlbum"
+        mf.genres = ["differentGenre"]
+        mf.save()
+        self._update("-m", "--field=genres")
+        item = self.lib.items().get()
+        assert b"differentAlbum" not in item.path
+        assert item.genres == ["differentGenre"]
+
+    def test_mtime_match_skips_update(self):
+        mf = MediaFile(self.i.filepath)
+        mf.title = "differentTitle"
+        mf.save()
+
+        # Make in-memory mtime match on-disk mtime.
+        self.i.mtime = self.i.filepath.stat().st_mtime
+        self.i.store()
+
+        self._update(reset_mtime=False)
+        item = self.lib.items().get()
+        assert item.title == "full"
+
+    def test_multivalued_albumtype_roundtrip(self):
+        # https://github.com/beetbox/beets/issues/4528
+
+        # albumtypes is empty for our test fixtures, so populate it first
+        album = self.album
+        correct_albumtypes = ["album", "live"]
+
+        # Setting albumtypes does not set albumtype, currently.
+        # Using x[0] mirrors https://github.com/beetbox/mediafile/blob/057432ad53b3b84385e5582f69f44dc00d0a725d/mediafile.py#L1928  # noqa: E501
+        correct_albumtype = correct_albumtypes[0]
+
+        album.albumtype = correct_albumtype
+        album.albumtypes = correct_albumtypes
+        album.try_sync(write=True, move=False)
+
+        album.load()
+        assert album.albumtype == correct_albumtype
+        assert album.albumtypes == correct_albumtypes
+
+        self._update()
+
+        album.load()
+        assert album.albumtype == correct_albumtype
+        assert album.albumtypes == correct_albumtypes
+
+    def test_modified_metadata_excluded(self):
+        mf = MediaFile(self.i.filepath)
+        mf.lyrics = "new lyrics"
+        mf.save()
+        self._update("--exclude-field=lyrics")
+        item = self.lib.items().get()
+        assert item.lyrics != "new lyrics"

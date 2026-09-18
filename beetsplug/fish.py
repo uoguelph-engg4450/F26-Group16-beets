@@ -1,0 +1,298 @@
+"""This plugin generates tab completions for Beets commands for the Fish shell
+<https://fishshell.com/>, including completions for Beets commands, plugin
+commands, and option flags. Also generated are completions for all the album
+and track fields, suggesting for example `genres:` or `album:` when querying the
+Beets database. Completions for the *values* of those fields are not generated
+by default but can be added via the `-e` / `--extravalues` flag. For example:
+`beet fish -e genres -e albumartist`
+"""
+
+from __future__ import annotations
+
+import os
+from operator import attrgetter
+from typing import TYPE_CHECKING, Any, Protocol
+
+from beets import library, plugins, ui
+from beets.plugins import BeetsPlugin
+from beets.ui import commands
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from beets.library import Library
+
+
+class FishCLIOpts(Protocol):
+    extravalues: list[str] | None
+    noFields: bool  # noqa: N815
+    output: str
+
+
+BL_NEED2 = """complete -c beet -n '__fish_beet_needs_command' {} {}\n"""
+BL_USE3 = """complete -c beet -n '__fish_beet_using_command {}' {} {}\n"""
+BL_SUBS = """complete -c beet -n '__fish_at_level {} ""' {}  {}\n"""
+BL_EXTRA3 = """complete -c beet -n '__fish_beet_use_extra {}' {} {}\n"""
+
+HEAD = """
+function __fish_beet_needs_command
+    set cmd (commandline -opc)
+    if test (count $cmd) -eq 1
+        return 0
+    end
+    return 1
+end
+
+function __fish_beet_using_command
+    set cmd (commandline -opc)
+    set needle (count $cmd)
+    if test $needle -gt 1
+        if begin test $argv[1] = $cmd[2];
+            and not contains -- $cmd[$needle] $FIELDS; end
+                return 0
+        end
+    end
+    return 1
+end
+
+function __fish_beet_use_extra
+    set cmd (commandline -opc)
+    set needle (count $cmd)
+    if test $argv[2]  = $cmd[$needle]
+        return 0
+    end
+    return 1
+end
+"""
+
+
+class FishPlugin(BeetsPlugin):
+    def commands(self) -> list[ui.Subcommand]:
+        cmd = ui.Subcommand("fish", help="generate Fish shell tab completions")
+        cmd.func = self.run
+        cmd.parser.add_option(
+            "-f",
+            "--noFields",
+            action="store_true",
+            default=False,
+            help="omit album/track field completions",
+        )
+        cmd.parser.add_option(
+            "-e",
+            "--extravalues",
+            action="append",
+            type="choice",
+            choices=list(library.Item.all_keys() | library.Album.all_keys()),
+            help="include specified field *values* in completions",
+        )
+        cmd.parser.add_option(
+            "-o",
+            "--output",
+            default="~/.config/fish/completions/beet.fish",
+            help=(
+                "where to save the script. default: ~/.config/fish/completions"
+            ),
+        )
+        return [cmd]
+
+    def run(self, lib: Library, opts: FishCLIOpts, args: list[str]) -> None:
+        # Gather the commands from Beets core and its plugins.
+        # Collect the album and track fields.
+        # If specified, also collect the values for these fields.
+        # Make a giant string of all the above, formatted in a way that
+        # allows Fish to do tab completion for the `beet` command.
+
+        completion_file_path = os.path.expanduser(opts.output)
+        completion_dir = os.path.dirname(completion_file_path)
+
+        if completion_dir != "":
+            os.makedirs(completion_dir, exist_ok=True)
+
+        nobasicfields = opts.noFields  # Do not complete for album/track fields
+        extravalues = opts.extravalues  # e.g., Also complete artists names
+        beetcmds = sorted(
+            (commands.default_commands + plugins.commands()),
+            key=attrgetter("name"),
+        )
+        fields = sorted(library.Album.all_keys() | library.Item.all_keys())
+        # Collect commands, their aliases, and their help text
+        cmd_names_help = []
+        for cmd in beetcmds:
+            names = list(cmd.aliases)
+            names.append(cmd.name)
+            for name in names:
+                cmd_names_help.append((name, cmd.help))
+        # Concatenate the string
+        totstring = f"{HEAD}\n"
+        totstring += get_cmds_list([name[0] for name in cmd_names_help])
+        totstring += "" if nobasicfields else get_standard_fields(fields)
+        totstring += get_extravalues(lib, extravalues) if extravalues else ""
+        totstring += "\n# ====== setup basic beet completion =====\n\n"
+        totstring += get_basic_beet_options()
+        totstring += "\n# ====== setup field completion for subcommands =====\n"
+        totstring += get_subcommands(cmd_names_help, nobasicfields, extravalues)
+        # Set up completion for all the command options
+        totstring += get_all_commands(beetcmds)
+
+        with open(completion_file_path, "w") as fish_file:
+            fish_file.write(totstring)
+
+
+def _escape(name: str) -> str:
+    # Escape ? in fish
+    if name == "?":
+        name = f"\\{name}"
+    return name
+
+
+def get_cmds_list(cmds_names: Iterable[str]) -> str:
+    # Make a list of all Beets core & plugin commands
+    return f"set CMDS {' '.join(cmds_names)}\n\n"
+
+
+def get_standard_fields(fields: Iterable[str]) -> str:
+    # Make a list of album/track fields and append with ':'
+    return f"set FIELDS {' '.join(f'{field}:' for field in fields)}\n\n"
+
+
+def get_extravalues(lib: Library, extravalues: Sequence[str]) -> str:
+    # Make a list of all values from an album/track field.
+    # 'beet ls albumartist: <TAB>' yields completions for ABBA, Beatles, etc.
+    word = ""
+    values_set = get_set_of_values_for_field(lib, extravalues)
+    for fld in extravalues:
+        extraname = f"{fld.upper()}S"
+        word += f"set  {extraname} {' '.join(sorted(values_set[fld]))}\n\n"
+    return word
+
+
+def get_set_of_values_for_field(
+    lib: Library, fields: Sequence[str]
+) -> dict[str, set[Any]]:
+    # Get unique values from a specified album/track field
+    fields_dict: dict[str, set[str]] = {}
+    for each in fields:
+        fields_dict[each] = set()
+    for item in lib.items():
+        for field in fields:
+            fields_dict[field].add(wrap(item[field]))
+    return fields_dict
+
+
+def get_basic_beet_options() -> str:
+    return (
+        BL_NEED2.format("-l format-item", "-f -d 'print with custom format'")
+        + BL_NEED2.format("-l format-album", "-f -d 'print with custom format'")
+        + BL_NEED2.format(
+            "-s  l  -l library", "-F -r -d 'library database file to use'"
+        )
+        + BL_NEED2.format(
+            "-s  d  -l directory", "-F -r -d 'destination music directory'"
+        )
+        + BL_NEED2.format(
+            "-s  v  -l verbose", "-f -d 'print debugging information'"
+        )
+        + BL_NEED2.format(
+            "-s  c  -l config", "-F -r -d 'path to configuration file'"
+        )
+        + BL_NEED2.format(
+            "-s  h  -l help", "-f -d 'print this help message and exit'"
+        )
+    )
+
+
+def get_subcommands(
+    cmd_name_and_help: Iterable[tuple[str, str]],
+    nobasicfields: bool,
+    extravalues: Iterable[str] | None,
+) -> str:
+    # Formatting for Fish to complete our fields/values
+    word = ""
+    for cmdname, cmdhelp in cmd_name_and_help:
+        cmdname = _escape(cmdname)
+
+        word += f"\n# ------ fieldsetups for {cmdname} -------\n"
+        word += BL_NEED2.format(
+            f"-a {cmdname}", f"-f -d {wrap(clean_whitespace(cmdhelp))}"
+        )
+
+        if nobasicfields is False:
+            word += BL_USE3.format(
+                cmdname, f"-a {wrap('$FIELDS')}", f"-d {wrap('fieldname')}"
+            )
+
+        if extravalues:
+            for f in extravalues:
+                setvar = wrap(f"${f.upper()}S")
+                word += " ".join(
+                    BL_EXTRA3.format(
+                        f"{cmdname} {f}:", f"-f -A -a {setvar}", f"-d {wrap(f)}"
+                    ).split()
+                )
+                word += "\n"
+    return word
+
+
+def get_all_commands(beetcmds: Sequence[ui.Subcommand]) -> str:
+    # Formatting for Fish to complete command options
+    word = ""
+    for cmd in beetcmds:
+        names = list(cmd.aliases)
+        names.append(cmd.name)
+        for name in names:
+            name = _escape(name)
+
+            word += f"\n\n\n# ====== completions for {name} =====\n"
+
+            for option in cmd.parser._get_all_options()[1:]:
+                cmd_l = (
+                    f" -l {option._long_opts[0].replace('--', '')}"
+                    if option._long_opts
+                    else ""
+                )
+                cmd_s = (
+                    f" -s {option._short_opts[0].replace('-', '')}"
+                    if option._short_opts
+                    else ""
+                )
+                cmd_need_arg = " -r " if option.nargs in [1] else ""
+                cmd_helpstr = (
+                    f" -d {wrap(' '.join(option.help.split()))}"
+                    if option.help
+                    else ""
+                )
+                cmd_arglist = (
+                    f" -a {wrap(' '.join(option.choices))}"
+                    if option.choices
+                    else ""
+                )
+
+                word += " ".join(
+                    BL_USE3.format(
+                        name,
+                        f"{cmd_need_arg}{cmd_s}{cmd_l} {cmd_arglist}",
+                        cmd_helpstr,
+                    ).split()
+                )
+                word += "\n"
+
+            word = word + BL_USE3.format(
+                name, "-s h -l help", f"-d {wrap('print help')}"
+            )
+    return word
+
+
+def clean_whitespace(word: str) -> str:
+    # Remove excess whitespace and tabs in a string
+    return " ".join(word.split())
+
+
+def wrap(word: str) -> str:
+    # Need " or ' around strings but watch out if they're in the string
+    sptoken = '"'
+    if '"' in word and ("'") in word:
+        word.replace('"', sptoken)
+        return f'"{word}"'
+
+    tok = '"' if "'" in word else "'"
+    return f"{tok}{word}{tok}"

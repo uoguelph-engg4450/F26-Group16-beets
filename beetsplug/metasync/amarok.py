@@ -1,0 +1,107 @@
+"""Synchronize information from amarok's library via dbus"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from os.path import basename
+from time import mktime
+from typing import TYPE_CHECKING, ClassVar
+from xml.sax.saxutils import quoteattr
+
+from beets.dbcore import types
+from beets.util import displayable_path
+from beetsplug.metasync import MetaSource
+
+if TYPE_CHECKING:
+    from types import ModuleType
+
+    from confuse import ConfigView
+
+    from beets.library import Item
+    from beets.logging import BeetsLogger as Logger
+
+
+def import_dbus() -> ModuleType | None:
+    try:
+        return __import__("dbus")
+    except ImportError:
+        return None
+
+
+dbus = import_dbus()
+
+
+class Amarok(MetaSource):
+    item_types: ClassVar[dict[str, types.Type]] = {
+        "amarok_rating": types.INTEGER,
+        "amarok_score": types.FLOAT,
+        "amarok_uid": types.STRING,
+        "amarok_playcount": types.INTEGER,
+        "amarok_firstplayed": types.DATE,
+        "amarok_lastplayed": types.DATE,
+    }
+
+    query_xml = """
+        <query version="1.0">
+            <filters>
+                <and><include field="filename" value={} /></and>
+            </filters>
+        </query>"""
+
+    def __init__(self, config: ConfigView, log: Logger) -> None:
+        super().__init__(config, log)
+
+        if not dbus:
+            raise ImportError("failed to import dbus")
+
+        self.collection = dbus.SessionBus().get_object(
+            "org.kde.amarok", "/Collection"
+        )
+
+    def sync_from_source(self, item: Item) -> None:
+        path = displayable_path(item.path)
+
+        # amarok unfortunately doesn't allow searching for the full path, only
+        # for the patch relative to the mount point. But the full path is part
+        # of the result set. So query for the filename and then try to match
+        # the correct item from the results we get back
+        results = self.collection.Query(
+            self.query_xml.format(quoteattr(basename(path)))
+        )
+        for result in results:
+            if result["xesam:url"] != path:
+                continue
+
+            item.amarok_rating = result["xesam:userRating"]
+            item.amarok_score = result["xesam:autoRating"]
+            item.amarok_playcount = result["xesam:useCount"]
+            item.amarok_uid = result["xesam:id"].replace(
+                "amarok-sqltrackuid://", ""
+            )
+
+            if result["xesam:firstUsed"][0][0] != 0:
+                # These dates are stored as timestamps in amarok's db, but
+                # exposed over dbus as fixed integers in the current timezone.
+                first_played = datetime(
+                    result["xesam:firstUsed"][0][0],
+                    result["xesam:firstUsed"][0][1],
+                    result["xesam:firstUsed"][0][2],
+                    result["xesam:firstUsed"][1][0],
+                    result["xesam:firstUsed"][1][1],
+                    result["xesam:firstUsed"][1][2],
+                )
+
+                if result["xesam:lastUsed"][0][0] != 0:
+                    last_played = datetime(
+                        result["xesam:lastUsed"][0][0],
+                        result["xesam:lastUsed"][0][1],
+                        result["xesam:lastUsed"][0][2],
+                        result["xesam:lastUsed"][1][0],
+                        result["xesam:lastUsed"][1][1],
+                        result["xesam:lastUsed"][1][2],
+                    )
+                else:
+                    last_played = first_played
+
+                item.amarok_firstplayed = mktime(first_played.timetuple())
+                item.amarok_lastplayed = mktime(last_played.timetuple())

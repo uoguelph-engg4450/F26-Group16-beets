@@ -1,0 +1,134 @@
+"""Allows inline path template customization code in the config file."""
+
+from __future__ import annotations
+
+import itertools
+import traceback
+from typing import TYPE_CHECKING, Any
+
+from beets import config
+from beets.plugins import BeetsPlugin
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from beets.library import LibModel
+
+    from ._typing import JSONDict
+
+
+FUNC_NAME = "__INLINE_FUNC__"
+
+
+class InlineError(Exception):
+    """Raised when a runtime error occurs in an inline expression."""
+
+    def __init__(self, code: str, exc: BaseException) -> None:
+        super().__init__(
+            f"error in inline path field code:\n{code}\n{type(exc).__name__}: {exc}"
+        )
+
+
+def _compile_func(body: str, args: str = "") -> Callable[..., Any]:
+    """Given Python code for a function body, return a compiled
+    callable that invokes that code.
+    """
+    body = body.replace("\n", "\n    ")
+    body = f"def {FUNC_NAME}({args}):\n    {body}"
+    code = compile(body, "inline", "exec")
+    env: JSONDict = {}
+    eval(code, env)
+    return env[FUNC_NAME]
+
+
+class InlinePlugin(BeetsPlugin):
+    def __init__(self) -> None:
+        super().__init__()
+
+        config.add(
+            {
+                "pathfields": {},  # Legacy name.
+                "item_fields": {},
+                "album_fields": {},
+            }
+        )
+
+        # Item fields.
+        for key, view in itertools.chain(
+            config["item_fields"].items(), config["pathfields"].items()
+        ):
+            self._log.debug("adding item field {}", key)
+            func = self.compile_inline(view.as_str(), False, key)
+            if func is not None:
+                self.template_fields[key] = func
+
+        # Album fields.
+        for key, view in config["album_fields"].items():
+            self._log.debug("adding album field {}", key)
+            func = self.compile_inline(view.as_str(), True, key)
+            if func is not None:
+                self.album_template_fields[key] = func
+
+    def compile_inline(
+        self, python_code: str, album: bool, field_name: str
+    ) -> Callable[[LibModel], Any] | None:
+        """Given a Python expression or function body, compile it as a path
+        field function. The returned function takes a single argument, an
+        Item, and returns a Unicode string. If the expression cannot be
+        compiled, then an error is logged and this function returns None.
+        """
+        # First, try compiling as a single function.
+        try:
+            code = compile(f"({python_code})", "inline", "eval")
+        except SyntaxError:
+            # Fall back to a function body.
+            try:
+                func = _compile_func(python_code, args="db_obj")
+            except SyntaxError:
+                self._log.error(
+                    "syntax error in inline field definition:\n{}",
+                    traceback.format_exc(),
+                )
+                return None
+            else:
+                is_expr = False
+        else:
+            is_expr = True
+
+        def _dict_for(obj: LibModel) -> JSONDict:
+            out = {}
+            for key in obj.keys(computed=False):
+                if key == field_name:
+                    continue
+                out[key] = obj._get(key)
+
+            if album:
+                out["items"] = list(obj.items())
+            return out
+
+        if is_expr:
+            # For expressions, just evaluate and return the result.
+            def _expr_func(obj: LibModel) -> Any:
+                values = _dict_for(obj)
+                values["db_obj"] = obj
+                try:
+                    return eval(code, values)
+                except Exception as exc:
+                    raise InlineError(python_code, exc)
+
+            return _expr_func
+
+        # For function bodies, invoke the function with values as global
+        # variables.
+        def _func_func(obj: LibModel) -> Any:
+            old_globals = dict(func.__globals__)
+            func.__globals__.update(_dict_for(obj))
+            try:
+                return func(obj)
+            except Exception as exc:
+                raise InlineError(python_code, exc)
+            finally:
+                func.__globals__.clear()
+                func.__globals__.update(old_globals)
+
+        return _func_func

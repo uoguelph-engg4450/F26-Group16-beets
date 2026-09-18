@@ -1,0 +1,1878 @@
+{
+  "aliases": [
+    {
+      "begin": null,
+      "end": null,
+      "ended": false,
+      "locale": "en",
+      "name": "In Bloom",
+      "primary": true,
+      "sort_name": "In Bloom",
+      "type": "Release name",
+      "type_id": "df187855-059b-3514-9d5e-d240de0b4228"
+    }
+  ],
+  "artist_credit": [
+    {
+      "artist": {
+        "aliases": [
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "en",
+            "name": "Lilas Ikuta",
+            "primary": true,
+            "sort_name": "Ikuta, Lilas",
+            "type": "Artist name",
+            "type_id": "894afba6-2816-3c24-8072-eadb66bd04bc"
+          }
+        ],
+        "country": "JP",
+        "disambiguation": "",
+        "genres": [
+          {
+            "count": 1,
+            "disambiguation": "",
+            "id": "eba7715e-ee26-4989-8d49-9db382955419",
+            "name": "j-pop"
+          },
+          {
+            "count": 1,
+            "disambiguation": "",
+            "id": "455f264b-db00-4716-991d-fbd32dc24523",
+            "name": "singer-songwriter"
+          }
+        ],
+        "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+        "name": "幾田りら",
+        "sort_name": "Ikuta, Lilas",
+        "tags": [
+          {
+            "count": 1,
+            "name": "j-pop"
+          },
+          {
+            "count": 1,
+            "name": "singer-songwriter"
+          }
+        ],
+        "type": "Person",
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+      },
+      "joinphrase": "",
+      "name": "幾田りら"
+    }
+  ],
+  "artist_relations": [
+    {
+      "artist": {
+        "country": "JP",
+        "disambiguation": "",
+        "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+        "name": "幾田りら",
+        "sort_name": "Ikuta, Lilas",
+        "type": "Person",
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+      },
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": "2025",
+      "direction": "backward",
+      "end": "2025",
+      "ended": true,
+      "source_credit": "",
+      "target_credit": "Lilas Ikuta",
+      "type": "copyright",
+      "type_id": "730b5251-7432-4896-8fc6-e1cba943bfe1"
+    },
+    {
+      "artist": {
+        "country": "JP",
+        "disambiguation": "",
+        "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+        "name": "幾田りら",
+        "sort_name": "Ikuta, Lilas",
+        "type": "Person",
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+      },
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": "2025",
+      "direction": "backward",
+      "end": "2025",
+      "ended": true,
+      "source_credit": "",
+      "target_credit": "Lilas Ikuta",
+      "type": "phonographic copyright",
+      "type_id": "01d3488d-8d2a-4cff-9226-5250404db4dc"
+    }
+  ],
+  "asin": "B0DR8Y2YDC",
+  "barcode": "199066336168",
+  "country": "XW",
+  "cover_art_archive": {
+    "artwork": true,
+    "back": false,
+    "count": 1,
+    "darkened": false,
+    "front": true
+  },
+  "date": "2025-01-10",
+  "disambiguation": "",
+  "genres": [],
+  "id": "a5ce1d11-2e32-45a4-b37f-c1589d46b103",
+  "label_info": [
+    {
+      "catalog_number": "Lilas-020",
+      "label": {
+        "aliases": [
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "2636621 Records DK",
+            "primary": null,
+            "sort_name": "2636621 Records DK",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Antipole",
+            "primary": null,
+            "sort_name": "Antipole",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Auto production",
+            "primary": null,
+            "sort_name": "Auto production",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Auto-Edición",
+            "primary": null,
+            "sort_name": "Auto-Edición",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Auto-Product",
+            "primary": null,
+            "sort_name": "Auto-Product",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Autoedición",
+            "primary": null,
+            "sort_name": "Autoedición",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Autoeditado",
+            "primary": null,
+            "sort_name": "Autoeditado",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Autoproduit",
+            "primary": null,
+            "sort_name": "Autoproduit",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Banana Skin Records",
+            "primary": null,
+            "sort_name": "Banana Skin Records",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Cannelle",
+            "primary": null,
+            "sort_name": "Cannelle",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Cece Natalie",
+            "primary": null,
+            "sort_name": "Cece Natalie",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Cherry X",
+            "primary": null,
+            "sort_name": "Cherry X",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Chung",
+            "primary": null,
+            "sort_name": "Chung",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Cody Johnson",
+            "primary": null,
+            "sort_name": "Cody Johnson",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Cowgirl Clue",
+            "primary": null,
+            "sort_name": "Cowgirl Clue",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "D.I.Y.",
+            "primary": null,
+            "sort_name": "D.I.Y.",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Damjan Mravunac Self-released)",
+            "primary": null,
+            "sort_name": "Damjan Mravunac Self-released)",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Demo",
+            "primary": null,
+            "sort_name": "Demo",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "DistroKid",
+            "primary": null,
+            "sort_name": "DistroKid",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Egzod",
+            "primary": null,
+            "sort_name": "Egzod",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Eigenverlag",
+            "primary": null,
+            "sort_name": "Eigenverlag",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Eigenvertrieb",
+            "primary": null,
+            "sort_name": "Eigenvertrieb",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "GRIND MODE",
+            "primary": null,
+            "sort_name": "GRIND MODE",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "INDIPENDANT",
+            "primary": null,
+            "sort_name": "INDIPENDANT",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Indepandant",
+            "primary": null,
+            "sort_name": "Indepandant",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Independant release",
+            "primary": null,
+            "sort_name": "Independant release",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Independent",
+            "primary": null,
+            "sort_name": "Independent",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Independente",
+            "primary": null,
+            "sort_name": "Independente",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Independiente",
+            "primary": null,
+            "sort_name": "Independiente",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Indie",
+            "primary": null,
+            "sort_name": "Indie",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Joost Klein",
+            "primary": null,
+            "sort_name": "Joost Klein",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Millington Records",
+            "primary": null,
+            "sort_name": "Millington Records",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "MoroseSound",
+            "primary": null,
+            "sort_name": "MoroseSound",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "N/A",
+            "primary": null,
+            "sort_name": "N/A",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "No Label",
+            "primary": null,
+            "sort_name": "No Label",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "None",
+            "primary": null,
+            "sort_name": "None",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "None Like Joshua",
+            "primary": null,
+            "sort_name": "None Like Joshua",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Not On A Lebel",
+            "primary": null,
+            "sort_name": "Not On A Lebel",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Not On Label",
+            "primary": null,
+            "sort_name": "Not On Label",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Offensively Average Productions",
+            "primary": null,
+            "sort_name": "Offensively Average Productions",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Ours",
+            "primary": null,
+            "sort_name": "Ours",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "P2019",
+            "primary": null,
+            "sort_name": "P2019",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "P2020",
+            "primary": null,
+            "sort_name": "P2020",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "P2021",
+            "primary": null,
+            "sort_name": "P2021",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "P2022",
+            "primary": null,
+            "sort_name": "P2022",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "P2023",
+            "primary": null,
+            "sort_name": "P2023",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "P2024",
+            "primary": null,
+            "sort_name": "P2024",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "P2025",
+            "primary": null,
+            "sort_name": "P2025",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Patriarchy",
+            "primary": null,
+            "sort_name": "Patriarchy",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Plini",
+            "primary": null,
+            "sort_name": "Plini",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Records DK",
+            "primary": null,
+            "sort_name": "Records DK",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Self Digital",
+            "primary": null,
+            "sort_name": "Self Digital",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Self Release",
+            "primary": null,
+            "sort_name": "Self Release",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Self Released",
+            "primary": null,
+            "sort_name": "Self Released",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Self-release",
+            "primary": null,
+            "sort_name": "Self-release",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Self-released",
+            "primary": null,
+            "sort_name": "Self-released",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Self-released/independent",
+            "primary": null,
+            "sort_name": "Self-released/independent",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Sevdaliza",
+            "primary": null,
+            "sort_name": "Sevdaliza",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "TOMMY CASH",
+            "primary": null,
+            "sort_name": "TOMMY CASH",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Take Van",
+            "primary": null,
+            "sort_name": "Take Van",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Talwiinder",
+            "primary": null,
+            "sort_name": "Talwiinder",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Unsigned",
+            "primary": null,
+            "sort_name": "Unsigned",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "VGR",
+            "primary": null,
+            "sort_name": "VGR",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "Woo Da Savage",
+            "primary": null,
+            "sort_name": "Woo Da Savage",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "YANAA",
+            "primary": null,
+            "sort_name": "YANAA",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "fi",
+            "name": "[ei levymerkkiä]",
+            "primary": true,
+            "sort_name": "ei levymerkkiä",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "nl",
+            "name": "[geen platenmaatschappij]",
+            "primary": true,
+            "sort_name": "[geen platenmaatschappij]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "et",
+            "name": "[ilma plaadifirmata]",
+            "primary": false,
+            "sort_name": "[ilma plaadifirmata]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "es",
+            "name": "[nada]",
+            "primary": true,
+            "sort_name": "[nada]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "en",
+            "name": "[no label]",
+            "primary": true,
+            "sort_name": "[no label]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "[nolabel]",
+            "primary": null,
+            "sort_name": "[nolabel]",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "[none]",
+            "primary": null,
+            "sort_name": "[none]",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "lt",
+            "name": "[nėra leidybinės kompanijos]",
+            "primary": false,
+            "sort_name": "[nėra leidybinės kompanijos]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "lt",
+            "name": "[nėra leidyklos]",
+            "primary": false,
+            "sort_name": "[nėra leidyklos]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "lt",
+            "name": "[nėra įrašų kompanijos]",
+            "primary": true,
+            "sort_name": "[nėra įrašų kompanijos]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "et",
+            "name": "[puudub]",
+            "primary": false,
+            "sort_name": "[puudub]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "ru",
+            "name": "[самиздат]",
+            "primary": false,
+            "sort_name": "samizdat",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": "ja",
+            "name": "[レーベルなし]",
+            "primary": true,
+            "sort_name": "[レーベルなし]",
+            "type": "Label name",
+            "type_id": "3a1a0c48-d885-3b89-87b2-9e8a483c5675"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "annapantsu music",
+            "primary": null,
+            "sort_name": "annapantsu music",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "auto-release",
+            "primary": null,
+            "sort_name": "auto-release",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "autoprod.",
+            "primary": null,
+            "sort_name": "autoprod.",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "ayesha erotica",
+            "primary": null,
+            "sort_name": "ayesha erotica",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "blank",
+            "primary": null,
+            "sort_name": "blank",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "cupcakKe",
+            "primary": null,
+            "sort_name": "cupcakKe",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "d.silvestre",
+            "primary": null,
+            "sort_name": "d.silvestre",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "dj-Jo",
+            "primary": null,
+            "sort_name": "dj-Jo",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "independent release",
+            "primary": null,
+            "sort_name": "independent release",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "lor2mg",
+            "primary": null,
+            "sort_name": "lor2mg",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "nyamura",
+            "primary": null,
+            "sort_name": "nyamura",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "pls dnt stp",
+            "primary": null,
+            "sort_name": "pls dnt stp",
+            "type": null,
+            "type_id": null
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "self",
+            "primary": null,
+            "sort_name": "self",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "self issued",
+            "primary": null,
+            "sort_name": "self issued",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "self-issued",
+            "primary": null,
+            "sort_name": "self-issued",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "white label",
+            "primary": null,
+            "sort_name": "white label",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "но лабел",
+            "primary": null,
+            "sort_name": "но лабел",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          },
+          {
+            "begin": null,
+            "end": null,
+            "ended": false,
+            "locale": null,
+            "name": "独立发行",
+            "primary": null,
+            "sort_name": "独立发行",
+            "type": "Search hint",
+            "type_id": "829662f2-a781-3ec8-8b46-fbcea6196f81"
+          }
+        ],
+        "disambiguation": "Special purpose label – white labels, self-published releases and other “no label” releases",
+        "genres": [],
+        "id": "157afde4-4bf5-4039-8ad2-5a15acc85176",
+        "label_code": null,
+        "name": "[no label]",
+        "sort_name": "[no label]",
+        "tags": [
+          {
+            "count": 12,
+            "name": "special purpose"
+          },
+          {
+            "count": 18,
+            "name": "special purpose label"
+          }
+        ],
+        "type": "Production",
+        "type_id": "a2426aab-2dd4-339c-b47d-b4923a241678"
+      }
+    }
+  ],
+  "media": [
+    {
+      "format": "Digital Media",
+      "format_id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+      "id": "43f08d54-a896-3561-be75-b881cbc832d5",
+      "position": 1,
+      "title": "",
+      "track_count": 1,
+      "track_offset": 0,
+      "tracks": [
+        {
+          "artist_credit": [
+            {
+              "artist": {
+                "aliases": [
+                  {
+                    "begin": null,
+                    "end": null,
+                    "ended": false,
+                    "locale": "en",
+                    "name": "Lilas Ikuta",
+                    "primary": true,
+                    "sort_name": "Ikuta, Lilas",
+                    "type": "Artist name",
+                    "type_id": "894afba6-2816-3c24-8072-eadb66bd04bc"
+                  }
+                ],
+                "country": "JP",
+                "disambiguation": "",
+                "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+                "name": "幾田りら",
+                "sort_name": "Ikuta, Lilas",
+                "type": "Person",
+                "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+              },
+              "joinphrase": "",
+              "name": "幾田りら"
+            }
+          ],
+          "id": "0bd01e8b-18e1-4708-b0a3-c9603b89ab97",
+          "length": 179239,
+          "number": "1",
+          "position": 1,
+          "recording": {
+            "aliases": [],
+            "artist_credit": [
+              {
+                "artist": {
+                  "country": "JP",
+                  "disambiguation": "",
+                  "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+                  "name": "幾田りら",
+                  "sort_name": "Ikuta, Lilas",
+                  "type": "Person",
+                  "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+                },
+                "joinphrase": "",
+                "name": "幾田りら"
+              }
+            ],
+            "artist_relations": [
+              {
+                "artist": {
+                  "country": "JP",
+                  "disambiguation": "Japanese composer/arranger/guitarist, agehasprings",
+                  "id": "f24241fb-4d89-4bf2-8336-3f2a7d2c0025",
+                  "name": "KOHD",
+                  "sort_name": "KOHD",
+                  "type": "Person",
+                  "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+                },
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": null,
+                "direction": "backward",
+                "end": null,
+                "ended": false,
+                "source_credit": "",
+                "target_credit": "",
+                "type": "arranger",
+                "type_id": "22661fb8-cdb7-4f67-8385-b2a8be6c9f0d"
+              },
+              {
+                "artist": {
+                  "country": "JP",
+                  "disambiguation": "",
+                  "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+                  "name": "幾田りら",
+                  "sort_name": "Ikuta, Lilas",
+                  "type": "Person",
+                  "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+                },
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": "2025",
+                "direction": "backward",
+                "end": "2025",
+                "ended": true,
+                "source_credit": "",
+                "target_credit": "Lilas Ikuta",
+                "type": "phonographic copyright",
+                "type_id": "7fd5fbc0-fbf4-4d04-be23-417d50a4dc30"
+              },
+              {
+                "artist": {
+                  "country": "JP",
+                  "disambiguation": "",
+                  "id": "1d27ab8a-a0df-47cf-b4cc-d2d7a0712a05",
+                  "name": "山本秀哉",
+                  "sort_name": "Yamamoto, Shuya",
+                  "type": "Person",
+                  "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+                },
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": null,
+                "direction": "backward",
+                "end": null,
+                "ended": false,
+                "source_credit": "",
+                "target_credit": "",
+                "type": "producer",
+                "type_id": "5c0ceac3-feb4-41f0-868d-dc06f6e27fc0"
+              },
+              {
+                "artist": {
+                  "country": "JP",
+                  "disambiguation": "",
+                  "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+                  "name": "幾田りら",
+                  "sort_name": "Ikuta, Lilas",
+                  "type": "Person",
+                  "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+                },
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": null,
+                "direction": "backward",
+                "end": null,
+                "ended": false,
+                "source_credit": "",
+                "target_credit": "",
+                "type": "vocal",
+                "type_id": "0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa"
+              }
+            ],
+            "disambiguation": "",
+            "first_release_date": "2025-01-10",
+            "genres": [],
+            "id": "781724c1-a039-41e6-bd9b-770c3b9d5b8e",
+            "isrcs": [
+              "JPP302400868"
+            ],
+            "length": 179546,
+            "tags": [],
+            "title": "百花繚乱",
+            "url_relations": [
+              {
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": null,
+                "direction": "forward",
+                "end": null,
+                "ended": false,
+                "source_credit": "",
+                "target_credit": "",
+                "type": "free streaming",
+                "type_id": "7e41ef12-a124-4324-afdb-fdbae687a89c",
+                "url": {
+                  "id": "d076eaf9-5fde-4f6e-a946-cde16b67aa3b",
+                  "resource": "https://open.spotify.com/track/782PTXsbAWB70ySDZ5NHmP"
+                }
+              },
+              {
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": null,
+                "direction": "forward",
+                "end": null,
+                "ended": false,
+                "source_credit": "",
+                "target_credit": "",
+                "type": "purchase for download",
+                "type_id": "92777657-504c-4acb-bd33-51a201bd57e1",
+                "url": {
+                  "id": "64879627-6eca-4755-98b5-b2234a8dbc61",
+                  "resource": "https://music.apple.com/jp/song/1857886416"
+                }
+              },
+              {
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": null,
+                "direction": "forward",
+                "end": null,
+                "ended": false,
+                "source_credit": "",
+                "target_credit": "",
+                "type": "streaming",
+                "type_id": "b5f3058a-666c-406f-aafb-f9249fc7b122",
+                "url": {
+                  "id": "64879627-6eca-4755-98b5-b2234a8dbc61",
+                  "resource": "https://music.apple.com/jp/song/1857886416"
+                }
+              }
+            ],
+            "video": false,
+            "work_relations": [
+              {
+                "attribute_ids": {},
+                "attribute_values": {},
+                "attributes": [],
+                "begin": null,
+                "direction": "forward",
+                "end": null,
+                "ended": false,
+                "source_credit": "",
+                "target_credit": "",
+                "type": "performance",
+                "type_id": "a3005666-a872-32c3-ad06-98af558e99b0",
+                "work": {
+                  "artist_relations": [
+                    {
+                      "artist": {
+                        "country": "JP",
+                        "disambiguation": "",
+                        "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+                        "name": "幾田りら",
+                        "sort_name": "Ikuta, Lilas",
+                        "type": "Person",
+                        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+                      },
+                      "attribute_ids": {},
+                      "attribute_values": {},
+                      "attributes": [],
+                      "begin": null,
+                      "direction": "backward",
+                      "end": null,
+                      "ended": false,
+                      "source_credit": "",
+                      "target_credit": "",
+                      "type": "composer",
+                      "type_id": "d59d99ea-23d4-4a80-b066-edca32ee158f"
+                    },
+                    {
+                      "artist": {
+                        "country": "JP",
+                        "disambiguation": "",
+                        "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+                        "name": "幾田りら",
+                        "sort_name": "Ikuta, Lilas",
+                        "type": "Person",
+                        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+                      },
+                      "attribute_ids": {},
+                      "attribute_values": {},
+                      "attributes": [],
+                      "begin": null,
+                      "direction": "backward",
+                      "end": null,
+                      "ended": false,
+                      "source_credit": "",
+                      "target_credit": "",
+                      "type": "lyricist",
+                      "type_id": "3e48faba-ec01-47fd-8e89-30e81161661c"
+                    }
+                  ],
+                  "attributes": [],
+                  "disambiguation": "",
+                  "id": "9e14d6b2-ac7d-43e9-82a9-561bc76ce2ed",
+                  "iswcs": [],
+                  "language": "jpn",
+                  "languages": [
+                    "jpn"
+                  ],
+                  "title": "百花繚乱",
+                  "type": "Song",
+                  "type_id": "f061270a-2fd6-32f1-a641-f0f8676d14e6",
+                  "url_relations": [
+                    {
+                      "attribute_ids": {},
+                      "attribute_values": {},
+                      "attributes": [],
+                      "begin": null,
+                      "direction": "backward",
+                      "end": null,
+                      "ended": false,
+                      "source_credit": "",
+                      "target_credit": "",
+                      "type": "lyrics",
+                      "type_id": "e38e65aa-75e0-42ba-ace0-072aeb91a538",
+                      "url": {
+                        "id": "dfac3640-6b23-4991-a59c-7cb80e8eb950",
+                        "resource": "https://utaten.com/lyric/tt24121002/"
+                      }
+                    },
+                    {
+                      "attribute_ids": {},
+                      "attribute_values": {},
+                      "attributes": [],
+                      "begin": null,
+                      "direction": "backward",
+                      "end": null,
+                      "ended": false,
+                      "source_credit": "",
+                      "target_credit": "",
+                      "type": "lyrics",
+                      "type_id": "e38e65aa-75e0-42ba-ace0-072aeb91a538",
+                      "url": {
+                        "id": "b1b5d5df-e79d-4cda-bb2a-8014e5505415",
+                        "resource": "https://www.uta-net.com/song/366579/"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "title": "百花繚乱"
+        }
+      ]
+    }
+  ],
+  "packaging": "None",
+  "packaging_id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+  "quality": "normal",
+  "release_events": [
+    {
+      "area": {
+        "disambiguation": "",
+        "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+        "iso_3166_1_codes": [
+          "XW"
+        ],
+        "name": "[Worldwide]",
+        "sort_name": "[Worldwide]",
+        "type": null,
+        "type_id": null
+      },
+      "date": "2025-01-10"
+    }
+  ],
+  "release_group": {
+    "aliases": [],
+    "artist_credit": [
+      {
+        "artist": {
+          "aliases": [
+            {
+              "begin": null,
+              "end": null,
+              "ended": false,
+              "locale": "en",
+              "name": "Lilas Ikuta",
+              "primary": true,
+              "sort_name": "Ikuta, Lilas",
+              "type": "Artist name",
+              "type_id": "894afba6-2816-3c24-8072-eadb66bd04bc"
+            }
+          ],
+          "country": "JP",
+          "disambiguation": "",
+          "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+          "name": "幾田りら",
+          "sort_name": "Ikuta, Lilas",
+          "type": "Person",
+          "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+        },
+        "joinphrase": "",
+        "name": "幾田りら"
+      }
+    ],
+    "disambiguation": "",
+    "first_release_date": "2025-01-10",
+    "genres": [],
+    "id": "da0d6bbb-f44b-4fff-8739-9d72db0402a1",
+    "primary_type": "Single",
+    "primary_type_id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "secondary_type_ids": [],
+    "secondary_types": [],
+    "tags": [],
+    "title": "百花繚乱"
+  },
+  "release_relations": [
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "release": {
+        "artist_credit": [
+          {
+            "artist": {
+              "country": "JP",
+              "disambiguation": "",
+              "id": "55e42264-ef27-49d8-93fd-29f930dc96e4",
+              "name": "幾田りら",
+              "sort_name": "Ikuta, Lilas",
+              "type": null,
+              "type_id": null
+            },
+            "joinphrase": "",
+            "name": "Lilas Ikuta"
+          }
+        ],
+        "barcode": null,
+        "disambiguation": "",
+        "id": "dc3ee2df-0bc1-49eb-b8c4-34473d279a43",
+        "media": [],
+        "packaging": null,
+        "packaging_id": null,
+        "quality": "normal",
+        "release_group": null,
+        "status": null,
+        "status_id": null,
+        "text_representation": {
+          "language": "eng",
+          "script": "Latn"
+        },
+        "title": "In Bloom"
+      },
+      "source_credit": "",
+      "target_credit": "",
+      "type": "transl-tracklisting",
+      "type_id": "fc399d47-23a7-4c28-bfcf-0607a562b644"
+    }
+  ],
+  "status": "Official",
+  "status_id": "4e304316-386d-3409-af2e-78857eec5cfe",
+  "tags": [],
+  "text_representation": {
+    "language": "jpn",
+    "script": "Jpan"
+  },
+  "title": "百花繚乱",
+  "url_relations": [
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "amazon asin",
+      "type_id": "4f2e710d-166c-480c-a293-2e2c8d658d87",
+      "url": {
+        "id": "b50c7fb8-2327-4a05-b989-f2211a41afee",
+        "resource": "https://www.amazon.co.jp/gp/product/B0DR8Y2YDC"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "free streaming",
+      "type_id": "08445ccf-7b99-4438-9f9a-fb9ac18099ee",
+      "url": {
+        "id": "5106a7b0-1443-4803-91a2-28cac2cfb5e0",
+        "resource": "https://open.spotify.com/album/3LDV2xGL9HiqCsQujEPQLb"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "free streaming",
+      "type_id": "08445ccf-7b99-4438-9f9a-fb9ac18099ee",
+      "url": {
+        "id": "d481d94b-a7bf-4e82-8da0-1757fedcda62",
+        "resource": "https://www.deezer.com/album/687686261"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "purchase for download",
+      "type_id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+      "url": {
+        "id": "6156d2e4-d107-43f9-8f44-52f04d39c78e",
+        "resource": "https://mora.jp/package/43000011/199066336168/"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "purchase for download",
+      "type_id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+      "url": {
+        "id": "a4eabb88-1746-4aa2-ab09-c28cfbe65efb",
+        "resource": "https://mora.jp/package/43000011/199066336168_HD/"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "purchase for download",
+      "type_id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+      "url": {
+        "id": "ab8440f0-3b13-4436-b3ad-f4695c9d8875",
+        "resource": "https://mora.jp/package/43000011/199066336168_LL/"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "purchase for download",
+      "type_id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+      "url": {
+        "id": "9a8ee8d1-f946-44a1-be16-8f7a77c951e9",
+        "resource": "https://music.apple.com/jp/album/1786972161"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "purchase for download",
+      "type_id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+      "url": {
+        "id": "c6faaa80-38fb-46a4-aa2b-78cddc5cbe70",
+        "resource": "https://ototoy.jp/_/default/p/2501951"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "purchase for download",
+      "type_id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+      "url": {
+        "id": "0e7e8bc5-0779-492d-a9db-9ab58f96d23b",
+        "resource": "https://www.qobuz.com/jp-ja/album/lilas-ikuta-/fl9tx2j78reza"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "purchase for download",
+      "type_id": "98e08c20-8402-4163-8970-53504bb6a1e4",
+      "url": {
+        "id": "c0cf8fe0-3413-4544-a026-37d346a59a77",
+        "resource": "https://www.qobuz.com/jp-ja/album/lilas-ikuta-/l1dnc4xoi6l7a"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "streaming",
+      "type_id": "320adf26-96fa-4183-9045-1f5f32f833cb",
+      "url": {
+        "id": "e4ce55a9-a5e1-4842-b42d-11be6a31fdab",
+        "resource": "https://music.amazon.co.jp/albums/B0DR8Y2YDC"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "streaming",
+      "type_id": "320adf26-96fa-4183-9045-1f5f32f833cb",
+      "url": {
+        "id": "9a8ee8d1-f946-44a1-be16-8f7a77c951e9",
+        "resource": "https://music.apple.com/jp/album/1786972161"
+      }
+    },
+    {
+      "attribute_ids": {},
+      "attribute_values": {},
+      "attributes": [],
+      "begin": null,
+      "direction": "forward",
+      "end": null,
+      "ended": false,
+      "source_credit": "",
+      "target_credit": "",
+      "type": "vgmdb",
+      "type_id": "6af0134a-df6a-425a-96e2-895f9cd342ba",
+      "url": {
+        "id": "1885772a-4004-4d45-9512-d0c8822506c9",
+        "resource": "https://vgmdb.net/album/145936"
+      }
+    }
+  ]
+}

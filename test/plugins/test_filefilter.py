@@ -1,0 +1,81 @@
+"""Tests for the `filefilter` plugin."""
+
+from beets.test.helper import ImportHelper, PluginMixin
+
+
+class FileFilterPluginHelper(PluginMixin, ImportHelper):
+    plugin = "filefilter"
+    preload_plugin = False
+
+    def setup_beets(self):
+        super().setup_beets()
+        self.prepare_tracks_for_import()
+
+    def prepare_tracks_for_import(self):
+        self.album_track, self.other_album_track, self.single_track = (
+            self.prepare_album_for_import(1, album_path=p)[0]
+            for p in [
+                self.import_path / "album",
+                self.import_path / "other_album",
+                self.import_path,
+            ]
+        )
+        self.all_tracks = {
+            self.album_track,
+            self.other_album_track,
+            self.single_track,
+        }
+
+    def _run(self, config, expected_album_count, expected_paths):
+        with self.configure_plugin(config):
+            self.importer.run()
+
+        assert len(self.lib.albums()) == expected_album_count
+        assert {i.filepath for i in self.lib.items()} == expected_paths
+
+
+class TestFileFilterPluginNonSingleton(FileFilterPluginHelper):
+    def setup_beets(self):
+        super().setup_beets()
+        self.importer = self.setup_importer(autotag=False, copy=False)
+
+    def test_import_default(self):
+        """The default configuration should import everything."""
+        self._run({}, 3, self.all_tracks)
+
+    def test_import_nothing(self):
+        self._run({"path": "not_there"}, 0, set())
+
+    def test_global_config(self):
+        self._run(
+            {"path": ".*album.*"}, 2, {self.album_track, self.other_album_track}
+        )
+
+    def test_album_config(self):
+        self._run(
+            {"album_path": ".*other_album.*"}, 1, {self.other_album_track}
+        )
+
+    def test_singleton_config(self):
+        """Check that singleton configuration is ignored for album import."""
+        self._run({"singleton_path": ".*other_album.*"}, 3, self.all_tracks)
+
+
+class TestFileFilterPluginSingleton(FileFilterPluginHelper):
+    def setup_beets(self):
+        super().setup_beets()
+        self.importer = self.setup_singleton_importer(autotag=False, copy=False)
+
+    def test_global_config(self):
+        self._run(
+            {"path": ".*album.*"}, 0, {self.album_track, self.other_album_track}
+        )
+
+    def test_album_config(self):
+        """Check that album configuration is ignored for singleton import."""
+        self._run({"album_path": ".*other_album.*"}, 0, self.all_tracks)
+
+    def test_singleton_config(self):
+        self._run(
+            {"singleton_path": ".*other_album.*"}, 0, {self.other_album_track}
+        )

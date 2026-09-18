@@ -1,0 +1,215 @@
+"""Gets parent work, its disambiguation and id, composer, composer sort name
+and work composition date
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import requests
+
+from beets import ui
+from beets.plugins import BeetsPlugin
+
+from ._utils.musicbrainz import MusicBrainzAPIMixin
+
+if TYPE_CHECKING:
+    import optparse
+
+    from beets.importer import ImportSession, ImportTask
+    from beets.library import Item, Library
+    from beetsplug._utils.musicbrainz import Work
+
+    from ._typing import JSONDict
+
+
+class ParentWorkPlugin(MusicBrainzAPIMixin, BeetsPlugin):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.config.add({"auto": False, "force": False})
+
+        if self.config["auto"]:
+            self.import_stages = [self.imported]
+
+    def commands(self) -> list[ui.Subcommand]:
+        def func(lib: Library, opts: optparse.Values, args: list[str]) -> None:
+            self.config.set_args(opts)
+            force_parent = self.config["force"].get(bool)
+            write = ui.should_write()
+
+            for item in lib.items(args):
+                changed = self.find_work(item, force_parent, verbose=True)
+                if changed:
+                    item.store()
+                    if write:
+                        item.try_write()
+
+        command = ui.Subcommand(
+            "parentwork", help="fetch parent works, composers and dates"
+        )
+
+        command.parser.add_option(
+            "-f",
+            "--force",
+            dest="force",
+            action="store_true",
+            default=None,
+            help="re-fetch when parent work is already present",
+        )
+
+        command.func = func
+        return [command]
+
+    def imported(self, session: ImportSession, task: ImportTask) -> None:
+        """Import hook for fetching parent works automatically."""
+        force_parent = self.config["force"].get(bool)
+
+        for item in task.imported_items():
+            self.find_work(item, force_parent, verbose=False)
+            item.store()
+
+    def get_info(self, item: Item, work_info: Work) -> JSONDict:
+        """Given the parent work info dict, fetch parent_composer,
+        parent_composer_sort, parentwork, parentwork_disambig, mb_workid and
+        composer_ids.
+        """
+
+        parent_composer = []
+        parent_composer_sort = []
+        parentwork_info = {}
+
+        composer_exists = False
+        for artist in work_info.get("artist_relations", []):
+            if artist["type"] == "composer":
+                composer_exists = True
+                parent_composer.append(artist["artist"]["name"])
+                parent_composer_sort.append(artist["artist"]["sort_name"])
+                if "end" in artist.keys():
+                    parentwork_info["parentwork_date"] = artist["end"]
+
+            parentwork_info["parent_composer"] = ", ".join(parent_composer)
+            parentwork_info["parent_composer_sort"] = ", ".join(
+                parent_composer_sort
+            )
+
+        if not composer_exists:
+            self._log.debug(
+                "no composer for {}; add one at "
+                "https://musicbrainz.org/work/{}",
+                item,
+                work_info["id"],
+            )
+
+        parentwork_info["parentwork"] = work_info["title"]
+        parentwork_info["mb_parentworkid"] = work_info["id"]
+
+        if "disambiguation" in work_info:
+            parentwork_info["parentwork_disambig"] = work_info["disambiguation"]
+
+        else:
+            parentwork_info["parentwork_disambig"] = None
+
+        return parentwork_info
+
+    def find_work(self, item: Item, force: bool, verbose: bool) -> bool | None:
+        """Finds the parent work of a recording and populates the tags
+        accordingly.
+
+        The parent work is found recursively, by finding the direct parent
+        repeatedly until there are no more links in the chain. We return the
+        final, topmost work in the chain.
+
+        Namely, the tags parentwork, parentwork_disambig, mb_parentworkid,
+        parent_composer, parent_composer_sort and work_date are populated.
+        """
+
+        if not item.mb_workid:
+            self._log.info(
+                "No work for {0}, add one at https://musicbrainz.org/recording/{0.mb_trackid}",
+                item,
+            )
+            return None
+
+        hasparent = hasattr(item, "parentwork")
+        work_changed = True
+        if hasattr(item, "parentwork_workid_current"):
+            work_changed = item.parentwork_workid_current != item.mb_workid
+        if force or not hasparent or work_changed:
+            try:
+                work_info, work_date = self.find_parentwork_info(item.mb_workid)
+            except requests.exceptions.RequestException:
+                self._log.debug("error fetching work", item, exc_info=True)
+                return None
+            parent_info = self.get_info(item, work_info)
+            parent_info["parentwork_workid_current"] = item.mb_workid
+            if "parent_composer" in parent_info:
+                self._log.debug(
+                    "Work fetched: {} - {}",
+                    parent_info["parentwork"],
+                    parent_info["parent_composer"],
+                )
+            else:
+                self._log.debug(
+                    "Work fetched: {} - no parent composer",
+                    parent_info["parentwork"],
+                )
+
+        elif hasparent:
+            self._log.debug("{}: Work present, skipping", item)
+            return None
+
+        # apply all non-null values to the item
+        for key, value in parent_info.items():
+            if value:
+                item[key] = value
+
+        if work_date:
+            item["work_date"] = work_date
+        if verbose:
+            return ui.show_model_changes(
+                item,
+                fields=[
+                    "parentwork",
+                    "parentwork_disambig",
+                    "mb_parentworkid",
+                    "parent_composer",
+                    "parent_composer_sort",
+                    "work_date",
+                    "parentwork_workid_current",
+                    "parentwork_date",
+                ],
+            )
+        return None
+
+    def find_parentwork_info(self, mb_workid: str) -> tuple[Work, str | None]:
+        """Get the MusicBrainz information dict about a parent work, including
+        the artist relations, and the composition date for a work's parent work.
+        """
+        work_date = None
+
+        parent_id: str | None = mb_workid
+
+        while parent_id:
+            current_id = parent_id
+            work_info = self.mb_api.get_work(
+                current_id, includes=["work-rels", "artist-rels"]
+            )
+            work_date = work_date or next(
+                (
+                    end
+                    for a in work_info.get("artist_relations", [])
+                    if a["type"] == "composer" and (end := a.get("end"))
+                ),
+                None,
+            )
+            parent_id = next(
+                (
+                    w["work"]["id"]
+                    for w in work_info.get("work_relations", [])
+                    if w["type"] == "parts" and w["direction"] == "backward"
+                ),
+                None,
+            )
+
+        return work_info, work_date

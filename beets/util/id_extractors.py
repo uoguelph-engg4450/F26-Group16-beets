@@ -1,0 +1,59 @@
+"""Helpers around the extraction of album/track ID's from metadata sources."""
+
+from __future__ import annotations
+
+import re
+
+from beets import logging
+
+log = logging.getLogger("beets")
+
+
+PATTERN_BY_SOURCE = {
+    # Accepts the raw ID, open.spotify.com URLs, and native URIs.
+    # (ex.: "spotify:album:<id>", "spotify:track:<id>").
+    "spotify": re.compile(
+        r"(?:^|open\.spotify\.com/[^/]+/|spotify:[a-z]+:)([0-9A-Za-z]{22})"
+    ),
+    "deezer": re.compile(r"(?:^|deezer\.com/)(?:[a-z]*/)?(?:[^/]+/)?(\d+)"),
+    "beatport": re.compile(r"(?:^|beatport\.com/release/.+/)(\d+)$"),
+    "musicbrainz": re.compile(r"(\w{8}(?:-\w{4}){3}-\w{12})"),
+    # - plain integer, optionally wrapped in brackets and prefixed by an
+    #   'r', as this is how discogs displays the release ID on its webpage.
+    # - legacy url format: discogs.com/<name of release>/release/<id>
+    # - legacy url short format: discogs.com/release/<id>
+    # - current url format: discogs.com/release/<id>-<name of release>
+    # See #291, #4080 and #4085 for the discussions leading up to these
+    # patterns.
+    "discogs": re.compile(
+        r"(?:^|\[?r|discogs\.com/(?:[^/]+/)?release/)(\d+)\b"
+    ),
+    # There is no such thing as a Bandcamp album or artist ID, the URL can be
+    # used as the identifier. The Bandcamp metadata source plugin works that way
+    # - https://github.com/snejus/beetcamp. Bandcamp album URLs usually look
+    # like: https://nameofartist.bandcamp.com/album/nameofalbum
+    "bandcamp": re.compile(r"(.+)"),
+    "tidal": re.compile(r"(?:^|tidal\.com/(?:browse/)?(?:album|track)/)(\d+)"),
+}
+
+
+def extract_release_id(source: str, id_: str) -> str | None:
+    """Extract the release ID from a given source and ID.
+
+    Normally, the `id_` is a url string which contains the ID of the
+    release. This function extracts the ID from the URL based on the
+    `source` provided.
+    """
+    try:
+        source_pattern = PATTERN_BY_SOURCE[source.lower()]
+    except KeyError:
+        log.debug(
+            "Unknown source '{}' for ID extraction. Returning id/url as-is.",
+            source,
+        )
+        return id_
+
+    if m := source_pattern.search(str(id_)):
+        return m[1]
+
+    return None

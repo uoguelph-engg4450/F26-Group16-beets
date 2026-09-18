@@ -1,0 +1,42 @@
+from beets import util
+
+
+class FileOperationError(Exception):
+    """Indicate an error when interacting with a file on disk.
+
+    Possibilities include an unsupported media type, a permissions
+    error, and an unhandled Mutagen exception.
+    """
+
+    def __init__(self, path: bytes, reason: Exception) -> None:
+        """Create an exception describing an operation on the file at
+        `path` with the underlying (chained) exception `reason`.
+        """
+        super().__init__(path, reason)
+        self.path = path
+        self.reason = reason
+
+    def __str__(self) -> str:
+        """Get a string representing the error.
+
+        Describe both the underlying reason and the file path in question.
+        """
+        return f"{util.displayable_path(self.path)}: {self.reason}"
+
+
+class ReadError(FileOperationError):
+    """An error while reading a file (i.e. in `Item.read`)."""
+
+    def __str__(self) -> str:
+        # Formatting super() directly stringifies the proxy object, so call
+        # __str__ explicitly to forward to FileOperationError.__str__.
+        return f"error reading {super().__str__()}"
+
+
+class WriteError(FileOperationError):
+    """An error while writing a file (i.e. in `Item.write`)."""
+
+    def __str__(self) -> str:
+        # Formatting super() directly stringifies the proxy object, so call
+        # __str__ explicitly to forward to FileOperationError.__str__.
+        return f"error writing {super().__str__()}"

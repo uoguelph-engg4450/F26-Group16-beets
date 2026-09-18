@@ -1,0 +1,88 @@
+from beets import library
+from beets.test.helper import BeetsTestCase, IOMixin
+from beets.util import MoveOperation
+
+
+class RemoveTest(IOMixin, BeetsTestCase):
+    def setUp(self):
+        super().setUp()
+
+        # Copy a file into the library.
+        self.i = library.Item.from_path(self.resource_path)
+        self.lib.add(self.i)
+        self.i.move(operation=MoveOperation.COPY)
+
+    def test_remove_items_no_delete(self):
+        self.io.addinput("y")
+        self.run_command("remove")
+        items = self.lib.items()
+        assert len(list(items)) == 0
+        assert self.i.filepath.exists()
+
+    def test_remove_albums_no_delete(self):
+        album = self.add_album_fixture(2)
+        self.io.addinput("y")
+        output = self.run_with_output("remove", "-a")
+        items = self.lib.items(f"album:{album.album}")
+        assert len(list(items)) == 0
+        assert "Really remove 2 items and 1 album from the library?" in output
+
+    def test_remove_items_with_delete(self):
+        self.io.addinput("y")
+        self.run_command("remove", "-d")
+        items = self.lib.items()
+        assert len(list(items)) == 0
+        assert not self.i.filepath.exists()
+
+    def test_remove_items_with_force_no_delete(self):
+        self.run_command("remove", "-f")
+        items = self.lib.items()
+        assert len(list(items)) == 0
+        assert self.i.filepath.exists()
+
+    def test_remove_items_with_force_delete(self):
+        self.run_command("remove", "-d", "-f")
+        items = self.lib.items()
+        assert len(list(items)) == 0
+        assert not self.i.filepath.exists()
+
+    def test_remove_items_select_with_delete(self):
+        i2 = library.Item.from_path(self.resource_path)
+        self.lib.add(i2)
+        i2.move(operation=MoveOperation.COPY)
+
+        for s in ("s", "y", "n"):
+            self.io.addinput(s)
+        output = self.run_with_output("remove", "-d")
+        assert "Really DELETE 2 files?" in output
+        items = self.lib.items()
+        assert len(list(items)) == 1
+        # There is probably no guarantee that the items are queried in any
+        # spcecific order, thus just ensure that exactly one was removed.
+        # To improve upon this, self.io would need to have the capability to
+        # generate input that depends on previous output.
+        num_existing = 0
+        num_existing += 1 if self.i.filepath.exists() else 0
+        num_existing += 1 if i2.filepath.exists() else 0
+        assert num_existing == 1
+
+    def test_remove_albums_select_with_delete(self):
+        a1 = self.add_album_fixture()
+        a2 = self.add_album_fixture()
+        path1 = a1.items()[0].filepath
+        path2 = a2.items()[0].filepath
+        items = self.lib.items()
+        assert len(list(items)) == 3
+
+        for s in ("s", "y", "n"):
+            self.io.addinput(s)
+        output = self.run_with_output("remove", "-d", "-a")
+        assert "Really DELETE 2 files and 2 albums?" in output
+
+        items = self.lib.items()
+        assert len(list(items)) == 2  # incl. the item from setUp()
+        # See test_remove_items_select_with_delete()
+        num_existing = 0
+        num_existing += 1 if path1.exists() else 0
+        num_existing += 1 if path2.exists() else 0
+        assert num_existing == 1
