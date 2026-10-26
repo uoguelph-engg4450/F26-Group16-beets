@@ -1,6 +1,6 @@
 # Assignment 2: shortlist of change requests
 
-Checked on 2026-10-26 against our copy of beets 2.14.1. Each item was either reproduced with a small script or confirmed by reading the code.
+Checked on 2026-10-26 against our copy of beets 2.14.1. Five of the seven items were checked: reproduced with a small script, confirmed by reading the code, or found to be not reproducible or already fixed. #4061 and #6770 were not checked in depth, because #6770 needs the Tidal API to be mocked and both were lower priority than the two bugs we selected.
 
 | # | Issue | Type | What the user wants | Status in our code | Effort | Risk | Offline test? |
 | --- | --- | --- | --- | --- | --- | --- | --- |

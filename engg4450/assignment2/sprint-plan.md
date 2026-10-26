@@ -14,9 +14,10 @@ The sprint is one day long, so the events are short:
 | Sprint planning | Oct 26 | whole team | 2 stories selected, estimates, risks, allocation (this file, Jira) |
 | Daily check-in | Oct 26 evening, Oct 27 midday | whole team, 10 min | board updated, blockers raised |
 | Sprint review | Oct 27 afternoon | PO + team | acceptance tests run on `phase-2`, stories accepted |
+| Release check | Oct 27, after `phase-2` is merged into `main` | tester, SM | full test suite and acceptance tests re-run on `main`; release commit recorded in the report |
 | Retrospective | Oct 27 | whole team, 10 min | what went well / what to change (report) |
 
-Board columns: To Do → In Progress → Done. A story is **Done** when its PR is merged into `phase-2`, the full test suite passes, its acceptance tests pass and the PO has accepted it.
+Board columns: To Do → In Progress → Done. A story is **Done** when its PR is merged into `phase-2`, the full test suite passes, its acceptance tests pass and the PO has accepted it. The sprint is finished when `phase-2` has been merged into `main` and the acceptance tests pass again on `main`.
 
 ## Roles and allocation
 
@@ -42,8 +43,11 @@ Everyone makes at least one commit from their own GitHub account: the fix (devel
 | KAN-11 | customer acceptance tests | 2 | 1 h | Low | automated runner, no network needed |
 | KAN-12 | process, estimates, risks, allocation write-up | 2 | 1 h | Low | this file |
 | KAN-13 | report (max 20 pages) | 3 | 3 h | Medium: deadline | start sections in parallel on Oct 26 |
-| KAN-14, KAN-15 | review, planning and retro | 2 | 1 h | Low | — |
-| | **Sprint total** | **18** (incl. KAN-9 done) | | | |
+| KAN-14 | sprint review | 1 | 30 min | Low | — |
+| KAN-15 | planning, check-ins and retro | 1 | 30 min | Low | — |
+| | **Sprint total** | **18** | | | |
+
+The 18 points are the nine sprint items: KAN-6 (2) + KAN-7 (2) + KAN-9 (2, already done) + KAN-10 (3) + KAN-11 (2) + KAN-12 (2) + KAN-13 (3) + KAN-14 (1) + KAN-15 (1). The backup KAN-8 (3) stays in the product backlog and is not counted. The same total shows in Jira for A2 Sprint 1.
 
 Team-level risks:
 
