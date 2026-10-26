@@ -7,7 +7,8 @@
 | Base project | beets (Python) |
 | Copied from | `beetbox/beets` |
 | Presentation topic | Sphinx |
-| Selected issue | _fill this in once your group has chosen_ |
+| Selected issues (Assignment 2) | [#7070](https://github.com/beetbox/beets/issues/7070) lyrics: synced LRCLIB lyrics dropped when they end with a blank line; [#5937](https://github.com/beetbox/beets/issues/5937) embedart: `quality` ignored when embedding automatically |
+| Assignment 2 branch | `phase-2` (merged into `main` at the end of the sprint) |
 
 ## Team members
 
@@ -15,12 +16,10 @@
 | --- | --- |
 | Shailen Naik | [@ShailenN1](https://github.com/ShailenN1) |
 | Abdul Hadi | [@abdulhadi-1](https://github.com/abdulhadi-1) |
-| Abdul Moeiz Ahmed | _not on file yet_ |
+| Abdul Moeiz Ahmed | [@abdulma3](https://github.com/abdulma3) |
 | Hasan Shariq | [@ShariqHas](https://github.com/ShariqHas) |
-| Aadil Irfan | [@jusst-ai](https://github.com/jusst-ai) |
-| Faraz Haque | _not on file yet_ |
+| Faraz Afnan Haque | [@FarazAfnan](https://github.com/FarazAfnan) |
 | Zaryan Syed | [@syedzar](https://github.com/syedzar) |
-| Chris Bonds | [@ChrisBonds](https://github.com/ChrisBonds) |
 
 ## How to work in this repository
 
