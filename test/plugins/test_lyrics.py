@@ -700,6 +700,26 @@ class TestLRCLibLyrics(LyricsBackendTest):
                 id="ignore synced with a timestamp longer than duration",
             ),
             pytest.param(
+                [lyrics_match(syncedLyrics=f"{SYNCED}\r\n\r\n")],
+                f"{SYNCED}\n",
+                id="synced with trailing blank line",
+            ),
+            pytest.param(
+                [
+                    lyrics_match(
+                        duration=59,
+                        syncedLyrics="[01:00.00] invalid synced\n\n",
+                    )
+                ],
+                None,
+                id="ignore synced with trailing blank line and long timestamp",
+            ),
+            pytest.param(
+                [lyrics_match(syncedLyrics="\n \n")],
+                "plain",
+                id="plain when synced lyrics are only whitespace",
+            ),
+            pytest.param(
                 [lyrics_match(syncedLyrics=None), lyrics_match()],
                 SYNCED,
                 id="prefer match with synced lyrics",
