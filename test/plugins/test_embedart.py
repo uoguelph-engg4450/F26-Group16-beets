@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from mediafile import MediaFile
 
-from beets import config, logging
+from beets import config, logging, plugins
 from beets.exceptions import UserError
 from beets.test import _common
 from beets.test.fixtures import DummyIMBackend
@@ -307,6 +307,21 @@ class TestEmbedartCli(PluginMixin, IOMixin, ImportHelper, FetchImageHelper):
 
         item = self.lib.items()[0]
         assert not MediaFile(item.filepath).images
+
+    def test_auto_embed_uses_configured_quality(self):
+        """Art embedded after ``art_set`` uses the configured JPEG quality."""
+        album = self.add_album_fixture()
+        self.config["import"]["write"] = True
+        # Reload the plugin so only one ``art_set`` listener is registered
+        self.unload_plugins()
+        with (
+            self.configure_plugin({"auto": True, "quality": 75}),
+            patch.object(art, "embed_album") as embed_album,
+        ):
+            plugins.send("art_set", album=album)
+
+        embed_album.assert_called_once()
+        assert embed_album.call_args.kwargs["quality"] == 75
 
 
 class DummyArtResizer(ArtResizer):

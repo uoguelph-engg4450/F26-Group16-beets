@@ -18,6 +18,9 @@ Bug fixes
 
 - Add ``alternatives.item_updated`` to the typed event list so
   :doc:`plugins/hook` can listen to it. :bug:`7036`
+- :doc:`plugins/embedart`: Use the ``quality`` option when art is embedded
+  automatically (``auto: yes``), as ``beet embedart`` already does.
+  :bug:`5937`
 
 ..
     For plugin developers
