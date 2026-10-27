@@ -282,9 +282,15 @@ class LRCLyrics:
     def verify_synced_lyrics(
         cls, duration: float, lyrics: str | None
     ) -> str | None:
-        """Accept synced lyrics only when the final timestamp fits duration."""
-        if lyrics and (
-            m := Lyrics.LINE_PARTS_PAT.match(lyrics.splitlines()[-1])
+        """Accept synced lyrics only when the final timestamp fits duration.
+
+        Trailing blank lines are ignored, so the check uses the last line
+        that has text in it.
+        """
+        if (
+            lyrics
+            and (text := lyrics.rstrip())
+            and (m := Lyrics.LINE_PARTS_PAT.match(text.splitlines()[-1]))
         ):
             ts, _ = m.groups()
             if ts:
