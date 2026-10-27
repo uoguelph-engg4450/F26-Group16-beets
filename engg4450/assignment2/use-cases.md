@@ -57,7 +57,7 @@ Primary actor in all three: **Music collector**, a person who manages a music li
 | Stakeholders and interests | **Music collector:** wants embedded cover art to be resized and compressed the same way every time, to keep files small. **Maintainers:** want the automatic path and the `beet embedart` command to behave the same. |
 | Trigger | Album art is set on an album, for example by `fetchart` during `beet import` or by `beet fetchart` (the `art_set` event). This extends *Fetch album art*. |
 | Preconditions | 1. `embedart` is enabled with `auto: yes` (default). 2. Writing tags is on (`import.write: yes`). 3. `embedart.maxwidth` and `embedart.quality` are set, for example `maxwidth: 500`, `quality: 75`. 4. ImageMagick or Pillow is installed for resizing. |
-| Postconditions (success) | Each eligible track, respecting the if empty and compare_threshold settings, has the album art embedded, resized to `maxwidth` and compressed at `quality`. |
+| Postconditions (success) | Each eligible track, respecting the `ifempty` and `compare_threshold` settings, has the album art embedded, resized to `maxwidth` and compressed at `quality`. |
 | Minimal guarantee | Only the image tags of the files are changed. The album art file is kept unless `remove_art_file` is on. |
 | Defect (beets 2.14.1) | The automatic path calls the embed function without `quality`, so the image is compressed with the tool's default (ImageMagick about 92, Pillow 75). Only `beet embedart` uses the configured value, so the same setting gives different file sizes. |
 
