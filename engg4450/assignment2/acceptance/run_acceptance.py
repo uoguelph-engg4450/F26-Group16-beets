@@ -25,6 +25,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 STUB = HERE / "beet_stub.py"
@@ -46,7 +47,7 @@ class Library:
         )
         shutil.copy(src / "test" / "rsrc" / "full.mp3", self.music / "01.mp3")
 
-    def beet(self, *args: str, lrclib: list | None = None) -> str:
+    def beet(self, *args: str, lrclib: list[dict[str, Any]] | None = None) -> str:
         env = dict(os.environ)
         env["BEETSDIR"] = str(self.root / "config")
         env["PYTHONPATH"] = str(self.src)
@@ -110,7 +111,7 @@ def _seconds(text: str) -> float:
 def cat_1(src: Path) -> tuple[bool, str]:
     """Synced lyrics that end with a blank line are saved as synced lyrics."""
     stored = fetch_lyrics(src, "[00:00.00] first line\r\n\r\n", "first line")
-    return stored.startswith("[00:00.00]"), f"stored lyrics: {stored!r}"
+    return stored == "[00:00.00] first line", f"stored lyrics: {stored!r}"
 
 
 def cat_2(src: Path) -> tuple[bool, str]:
@@ -188,7 +189,10 @@ def cat_5(src: Path) -> tuple[bool, str]:
     auto, auto_size = import_with_art(src, 20)
     manual, manual_size = embed_by_command(src, 20)
     detail = f"import: {auto} bytes {auto_size}, beet embedart: {manual} bytes"
-    return auto > 0 and auto == manual, f"{detail} {manual_size}"
+    return (
+        auto > 0 and auto == manual and auto_size == manual_size,
+        f"{detail} {manual_size}",
+    )
 
 
 def cat_6(src: Path) -> tuple[bool, str]:
