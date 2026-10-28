@@ -47,7 +47,9 @@ class Library:
         )
         shutil.copy(src / "test" / "rsrc" / "full.mp3", self.music / "01.mp3")
 
-    def beet(self, *args: str, lrclib: list[dict[str, Any]] | None = None) -> str:
+    def beet(
+        self, *args: str, lrclib: list[dict[str, Any]] | None = None
+    ) -> str:
         env = dict(os.environ)
         env["BEETSDIR"] = str(self.root / "config")
         env["PYTHONPATH"] = str(self.src)
